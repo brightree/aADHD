@@ -21,14 +21,14 @@ final class Updater: ObservableObject {
     @Published private(set) var state: State = .idle
     @Published private(set) var notes = "" // CHANGELOG 중 새 버전 부분
 
-    private static let latestAPI = "https://api.github.com/repos/brightree/focus-guard/releases/latest"
-    private static let latestZip = "https://github.com/brightree/focus-guard/releases/latest/download/FocusGuard.zip"
+    private static let latestAPI = "https://api.github.com/repos/brightree/aADHD/releases/latest"
+    private static let latestZip = "https://github.com/brightree/aADHD/releases/latest/download/FocusGuard.zip"
     private static let lastCheckKey = "lastUpdateCheck"
     private static let notifiedKey = "notifiedVersion"
 
     let current = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
 
-    /// 이 앱이 들어 있는 저장소 (…/focus-guard). 앱이 app/FocusGuard.app 에 있을 때만.
+    /// 이 앱이 들어 있는 저장소 (…/focus-guard 등 받은 폴더). 앱이 app/FocusGuard.app 에 있을 때만.
     var repoDir: URL? {
         let repo = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
         return FileManager.default.fileExists(atPath: repo.appendingPathComponent(".git").path) ? repo : nil

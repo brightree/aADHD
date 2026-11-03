@@ -5,7 +5,7 @@ namespace FocusGuard.Core;
 /// 깃허브 최신 릴리스 정보 (버전 · 바뀐 내용 · 윈도우용 파일 주소)
 public sealed record ReleaseInfo(string Version, string Notes, string? AssetUrl)
 {
-    public const string LatestApi = "https://api.github.com/repos/brightree/focus-guard/releases/latest";
+    public const string LatestApi = "https://api.github.com/repos/brightree/aADHD/releases/latest";
     public const string WindowsAsset = "FocusGuard-Windows.zip";
 
     /// 릴리스 JSON 을 읽는다. 윈도우용 파일이 아직 안 올라왔으면 AssetUrl 은 null.
