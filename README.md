@@ -1,6 +1,6 @@
 # 🍅 aADHD (anti-ADHD)
 
-aADHD (anti-ADHD) is a menu bar (macOS) and system tray (Windows) app that helps you build study habits with Pomodoro sessions, website blocking, and a place to park distractions for later.
+**Anti-ADHD for researchers in the AI era.** While an AI writes your code, runs your analysis, or drafts your text, it takes one wait to drift to YouTube, and then another. aADHD keeps you on task: a menu bar (macOS) and system tray (Windows) app with Pomodoro sessions, website blocking, and a place to park distractions for later.
 
 - **Mac:** see [Install](#install).
 - **Windows:** see [Windows](#windows).
