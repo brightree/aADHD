@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Focus Guard 맥 앱을 빌드해서 app/FocusGuard.app 을 만든다.
+# aADHD (anti-ADHD) 맥 앱을 빌드해서 app/FocusGuard.app 을 만든다.
 # 기록은 앱 밖(data.json)에 저장되므로 다시 빌드해도 지워지지 않는다.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -34,8 +34,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <plist version="1.0">
 <dict>
   <key>CFBundleIdentifier</key><string>local.focusguard.app</string>
-  <key>CFBundleName</key><string>FocusGuard</string>
-  <key>CFBundleDisplayName</key><string>Focus Guard</string>
+  <key>CFBundleName</key><string>aADHD</string>
+  <key>CFBundleDisplayName</key><string>aADHD</string>
   <key>CFBundleExecutable</key><string>FocusGuard</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>

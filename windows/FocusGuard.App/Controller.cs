@@ -33,7 +33,7 @@ sealed class Controller : ApplicationContext
         Store = store;
         invoker.CreateControl();
         Updater = new Updater(this, prefs);
-        Tray = new NotifyIcon { Icon = AppIcon, Text = "Focus Guard", Visible = !selfTest };
+        Tray = new NotifyIcon { Icon = AppIcon, Text = "aADHD", Visible = !selfTest };
         Tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) TogglePanel(); };
         Tray.BalloonTipClicked += (_, _) => TogglePanel();
         var menu = new ContextMenuStrip();
@@ -114,7 +114,7 @@ sealed class Controller : ApplicationContext
         var key = $"{Store.Phase}|{Store.IsPaused}|{minutes}";
         if (key == lastTrayText) return;
         lastTrayText = key;
-        var tip = Store.Phase == Phase.Idle ? "Focus Guard" : $"{Store.Phase.Label()} · {minutes}{L("분", " min")}" + (Store.Timer.Task.Length > 0 ? $" · {Store.Timer.Task}" : "");
+        var tip = Store.Phase == Phase.Idle ? "aADHD" : $"{Store.Phase.Label()} · {minutes}{L("분", " min")}" + (Store.Timer.Task.Length > 0 ? $" · {Store.Timer.Task}" : "");
         Tray.Text = tip.Length > 63 ? tip[..63] : tip;
         var old = Tray.Icon;
         Tray.Icon = Store.Phase == Phase.Idle ? AppIcon : DrawBadge(minutes, Store.IsPaused ? Color.Gray : Store.Phase switch { Phase.Focus => Ui.Red, Phase.Wrap => Ui.Orange, _ => Ui.Green });

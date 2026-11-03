@@ -73,7 +73,7 @@ sealed class Updater
         if (prefs.Get("notifiedVersion") != r.Version)
         {
             prefs.Set("notifiedVersion", r.Version);
-            app.Tray.ShowBalloonTip(8000, I18n.L($"🍅 새 버전 {r.Version}이 나왔어요", $"🍅 Focus Guard {r.Version} is available"),
+            app.Tray.ShowBalloonTip(8000, I18n.L($"🍅 새 버전 {r.Version}이 나왔어요", $"🍅 aADHD {r.Version} is available"),
                 I18n.L("트레이의 🍅 → 업데이트를 누르면 바로 설치돼요.", "Click the 🍅 tray icon, then Update to install it."), ToolTipIcon.None);
         }
         app.RequestRefresh();
@@ -131,8 +131,8 @@ static class Uninstaller
         var delete = new TaskDialogButton(I18n.L("삭제", "Delete"));
         var page = new TaskDialogPage
         {
-            Caption = "Focus Guard",
-            Heading = I18n.L("Focus Guard를 삭제할까요?", "Delete Focus Guard?"),
+            Caption = "aADHD",
+            Heading = I18n.L("aADHD를 삭제할까요?", "Delete aADHD?"),
             Text = I18n.L("앱을 지우고 종료해요. 로그인 시 자동 실행도 꺼져요.", "This deletes the app and quits it. Launch at login will also be turned off."),
             Verification = withData,
             Buttons = { delete, TaskDialogButton.Cancel },

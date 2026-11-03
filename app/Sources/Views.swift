@@ -755,7 +755,7 @@ struct DashboardView: View {
 
                 Divider()
                 HStack {
-                    Text("Focus Guard v\(updater.current) · \(madeBy)").foregroundStyle(.secondary)
+                    Text("aADHD v\(updater.current) · \(madeBy)").foregroundStyle(.secondary)
                     switch updater.state {
                     case .checking: Text(L("확인 중…", "Checking…")).foregroundStyle(.secondary)
                     case .upToDate: Text(L("최신 버전이에요 ✓", "You're up to date ✓")).foregroundStyle(.secondary)
@@ -1234,8 +1234,8 @@ struct SettingsView: View {
                 get: { sync.enabled },
                 set: { sync.setEnabled($0) }))
             Text(sync.status.isEmpty
-                 ? L("미리 알림에 'Focus Guard 할 일' · 'Focus Guard 나중에 할 것' 목록을 만들어 아이클라우드로 맞춰요. 폰에서 체크 · 추가 · 수정한 것도 여기로 와요. (오늘 이후 할 일만)",
-                     "Creates 'Focus Guard To-dos' and 'Focus Guard Later' lists in Reminders, synced through iCloud. Checks, additions, and edits on your phone come back here. (Today and later only)")
+                 ? L("미리 알림에 'aADHD 할 일' · 'aADHD 나중에 할 것' 목록을 만들어 아이클라우드로 맞춰요. 폰에서 체크 · 추가 · 수정한 것도 여기로 와요. (오늘 이후 할 일만)",
+                     "Creates 'aADHD To-dos' and 'aADHD Later' lists in Reminders, synced through iCloud. Checks, additions, and edits on your phone come back here. (Today and later only)")
                  : sync.status)
                 .font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1253,7 +1253,7 @@ struct SettingsView: View {
 
             Divider()
             HStack {
-                Button(L("Focus Guard 삭제…", "Delete Focus Guard…"), role: .destructive, action: uninstall)
+                Button(L("aADHD 삭제…", "Delete aADHD…"), role: .destructive, action: uninstall)
                 Spacer()
                 Text("v\(Updater.shared.current) · \(madeBy)").font(.caption).foregroundStyle(.secondary)
             }

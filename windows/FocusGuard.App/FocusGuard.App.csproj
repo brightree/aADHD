@@ -8,7 +8,7 @@
     <AssemblyName>FocusGuard</AssemblyName>
     <RootNamespace>FocusGuard.App</RootNamespace>
     <ApplicationIcon>tomato.ico</ApplicationIcon>
-    <Product>Focus Guard</Product>
+    <Product>aADHD</Product>
     <Company>Anonymous, KAIST IS</Company>
     <!-- 배포: 실행 파일 하나 (런타임 포함, 설치 필요 없음) -->
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>

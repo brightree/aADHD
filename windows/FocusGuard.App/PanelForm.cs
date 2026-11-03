@@ -16,7 +16,7 @@ sealed class PanelForm : AppWindow
     readonly Label laterHint = Ui.Text("", Ui.Small, Ui.Green);
     string buttonsKey = "";
 
-    public PanelForm(Controller app) : base(app, "Focus Guard")
+    public PanelForm(Controller app) : base(app, "aADHD")
     {
         FormBorderStyle = FormBorderStyle.FixedToolWindow;
         ControlBox = false;

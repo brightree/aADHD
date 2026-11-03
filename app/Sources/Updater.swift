@@ -79,7 +79,7 @@ final class Updater: ObservableObject {
         state = .available(remote)
         if UserDefaults.standard.string(forKey: Self.notifiedKey) != remote {
             UserDefaults.standard.set(remote, forKey: Self.notifiedKey)
-            Store.shared.notify(L("🍅 새 버전 \(remote)이 나왔어요", "🍅 Focus Guard \(remote) is available"), L("메뉴 막대 🍅 → 업데이트를 누르면 바로 설치돼요.", "Click 🍅 in the menu bar, then Update to install it."))
+            Store.shared.notify(L("🍅 새 버전 \(remote)이 나왔어요", "🍅 aADHD \(remote) is available"), L("메뉴 막대 🍅 → 업데이트를 누르면 바로 설치돼요.", "Click 🍅 in the menu bar, then Update to install it."))
         }
     }
 

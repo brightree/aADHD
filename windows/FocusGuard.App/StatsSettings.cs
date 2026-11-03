@@ -107,7 +107,7 @@ sealed class SettingsForm : AppWindow
     readonly CheckBox track, morning, login;
     readonly Label saved = Ui.Text("", Ui.Small, Ui.Muted), rejected = Ui.Text("", Ui.Small, Ui.Red, W), dir = Ui.Text("", Ui.Small, Ui.Muted, W);
 
-    public SettingsForm(Controller app) : base(app, I18n.L("Focus Guard 설정", "Focus Guard Settings"))
+    public SettingsForm(Controller app) : base(app, I18n.L("aADHD 설정", "aADHD Settings"))
     {
         AutoScroll = true;
         Size = new Size(W + 70, 820);
@@ -184,7 +184,7 @@ sealed class SettingsForm : AppWindow
 
         root.Controls.Add(new Label { Height = 1, Width = W, BackColor = Color.Gainsboro, Margin = new Padding(0, 8, 0, 8) });
         var bottom = Ui.Row();
-        bottom.Controls.Add(Ui.Button(L("Focus Guard 삭제…", "Delete Focus Guard…"), () => Uninstaller.Run(App)));
+        bottom.Controls.Add(Ui.Button(L("aADHD 삭제…", "Delete aADHD…"), () => Uninstaller.Run(App)));
         bottom.Controls.Add(Ui.Text($"   v{Updater.Current} · Made by Anonymous, KAIST IS", Ui.Small, Ui.Muted));
         root.Controls.Add(bottom);
         Controls.Add(root);

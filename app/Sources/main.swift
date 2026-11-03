@@ -1,4 +1,4 @@
-// Focus Guard — 맥 메뉴 막대 뽀모도로 앱.
+// aADHD (anti-ADHD) — 맥 메뉴 막대 뽀모도로 앱.
 // 메뉴 막대 표시와 패널, 창 관리, 전역 단축키(⌥⇧L), 로컬 서버와 브라우저 감시 시작을 담당한다.
 
 import AppKit
@@ -160,7 +160,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
         guard title != lastTitle else { return }
         lastTitle = title
         b.title = title
-        b.toolTip = store.timer.task.isEmpty ? "Focus Guard" : "📌 \(store.timer.task)"
+        b.toolTip = store.timer.task.isEmpty ? "aADHD" : "📌 \(store.timer.task)"
     }
 
     // MARK: 메뉴 막대 패널
@@ -271,7 +271,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
     }
 
     func showDashboard() {
-        Windows.shared.show("dashboard", title: "Focus Guard", resizable: true) {
+        Windows.shared.show("dashboard", title: "aADHD", resizable: true) {
             DashboardView(openPlan: { [weak self] in self?.showPlan(day: $0) },
                           openSettings: { [weak self] in self?.showSettings() },
                           openStats: { [weak self] in self?.showStats() },
@@ -281,7 +281,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
     }
 
     func showSettings() {
-        Windows.shared.show("settings", title: L("Focus Guard 설정", "Focus Guard Settings"), resizable: true, height: 760) {
+        Windows.shared.show("settings", title: L("aADHD 설정", "aADHD Settings"), resizable: true, height: 760) {
             SettingsView(chooseFolder: { [weak self] in self?.chooseFolder() },
                          revealFolder: { [weak self] in self?.revealFolder() },
                          toggleLogin: { [weak self] in self?.toggleLogin() },
@@ -310,14 +310,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
                 try SMAppService.mainApp.register()
             }
         } catch {
-            alert(L("자동 실행 설정에 실패했어요", "Couldn't change launch at login"), L("시스템 설정 → 일반 → 로그인 항목에서 FocusGuard를 직접 추가할 수 있어요.\n\(error.localizedDescription)", "You can add Focus Guard yourself in System Settings → General → Login Items.\n\(error.localizedDescription)"))
+            alert(L("자동 실행 설정에 실패했어요", "Couldn't change launch at login"), L("시스템 설정 → 일반 → 로그인 항목에서 aADHD를 직접 추가할 수 있어요.\n\(error.localizedDescription)", "You can add aADHD yourself in System Settings → General → Login Items.\n\(error.localizedDescription)"))
         }
     }
 
     /// 앱을 휴지통으로 옮기고 종료한다. 원하면 기록 폴더도 휴지통으로 옮긴다 (되살릴 수 있음).
     func uninstall() {
         let a = NSAlert()
-        a.messageText = L("Focus Guard를 삭제할까요?", "Delete Focus Guard?")
+        a.messageText = L("aADHD를 삭제할까요?", "Delete aADHD?")
         a.informativeText = L("앱을 휴지통으로 옮기고 종료해요. 로그인 시 자동 실행도 꺼져요.", "This moves the app to the Trash and quits it. Launch at login will also be turned off.")
         let withData = NSButton(checkboxWithTitle: L("기록도 함께 휴지통으로 옮기기\n(\(store.dataDir.path))", "Also move my data to the Trash\n(\(store.dataDir.path))"), target: nil, action: nil)
         a.accessoryView = withData

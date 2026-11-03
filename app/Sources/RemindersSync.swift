@@ -27,8 +27,8 @@ final class RemindersSync: ObservableObject {
     private var running = false, again = false
 
     private static var deniedText: String {
-        L("미리 알림 접근이 꺼져 있어요. 시스템 설정 → 개인정보 보호 및 보안 → 미리 알림에서 Focus Guard를 켜 주세요.",
-          "Reminders access is off. Turn on Focus Guard in System Settings → Privacy & Security → Reminders.")
+        L("미리 알림 접근이 꺼져 있어요. 시스템 설정 → 개인정보 보호 및 보안 → 미리 알림에서 aADHD를 켜 주세요.",
+          "Reminders access is off. Turn on aADHD in System Settings → Privacy & Security → Reminders.")
     }
 
     func start(_ store: Store) {
@@ -198,8 +198,11 @@ final class RemindersSync: ObservableObject {
     // MARK: - 미리 알림 목록 · 날짜
 
     private func list(_ slot: Slot, _ state: inout State) -> EKCalendar? {
-        if let id = state.lists[slot.rawValue], let c = ek.calendar(withIdentifier: id) { return c }
-        let title = slot == .todos ? L("Focus Guard 할 일", "Focus Guard To-dos") : L("Focus Guard 나중에 할 것", "Focus Guard Later")
+        let title = slot == .todos ? L("aADHD 할 일", "aADHD To-dos") : L("aADHD 나중에 할 것", "aADHD Later")
+        if let id = state.lists[slot.rawValue], let c = ek.calendar(withIdentifier: id) {
+            if c.title != title { c.title = title; try? ek.saveCalendar(c, commit: true) } // 앱 이름이 바뀌면 목록 이름도 따라간다
+            return c
+        }
         var cal = ek.calendars(for: .reminder).first { $0.title == title }
         if cal == nil {
             guard let source = ek.defaultCalendarForNewReminders()?.source else { return nil }

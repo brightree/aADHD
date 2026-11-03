@@ -16,7 +16,7 @@ sealed class DashboardForm : AppWindow
     readonly Button nextWeek;
     readonly TextBox laterAdd;
 
-    public DashboardForm(Controller app) : base(app, "Focus Guard")
+    public DashboardForm(Controller app) : base(app, "aADHD")
     {
         selected = Store.TodayKey;
         AutoScroll = true;
@@ -83,7 +83,7 @@ sealed class DashboardForm : AppWindow
         chart.SetData(dates, secs, selected, Store.TodayKey);
 
         var u = App.Updater;
-        footer.Text = $"Focus Guard v{Updater.Current} · Made by Anonymous, KAIST IS"
+        footer.Text = $"aADHD v{Updater.Current} · Made by Anonymous, KAIST IS"
                     + (u.Checking ? "   " + L("확인 중…", "Checking…") : u.UpToDate ? "   " + L("최신 버전이에요 ✓", "You're up to date ✓") : u.Error != null ? "   " + u.Error : "");
         if (!dataChanged || editing) return;
         BuildFooterButton();

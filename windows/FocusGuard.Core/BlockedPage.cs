@@ -45,8 +45,8 @@ public static class BlockedPage
     <p class="muted" style="margin-top:16px">{{L($"{closeShortcut}로 이 탭을 닫고 공부로 돌아가요.", $"Press {closeShortcut} to close this tab and get back to work.")}}</p>
   </div>
   <div id="offlineView" class="hidden">
-    <h1>{{L("앱과 연결할 수 없어요", "Can not reach Focus Guard")}}</h1>
-    <p class="muted">{{L("Focus Guard가 켜져 있는지 확인해 주세요. 연결되면 자동으로 다시 보여드려요.", "Make sure Focus Guard is running. This page updates once it reconnects.")}}</p>
+    <h1>{{L("앱과 연결할 수 없어요", "Can not reach aADHD")}}</h1>
+    <p class="muted">{{L("aADHD가 켜져 있는지 확인해 주세요. 연결되면 자동으로 다시 보여드려요.", "Make sure aADHD is running. This page updates once it reconnects.")}}</p>
   </div>
   <div id="doneView" class="hidden">
     <h1>{{L("집중 시간이 끝났어요", "Focus time is over")}}</h1>

@@ -15,5 +15,5 @@ ditto -c -k --keepParent FocusGuard.app "$OUT/FocusGuard.zip"
 # "## 1.6.0 — …" 다음 줄부터 다음 "## " 전까지
 awk -v v="$VERSION" '/^## /{ if (on) exit; if ($2 == v) { on = 1; next } } on' ../CHANGELOG.md > "$OUT/notes.md"
 
-gh release create "v$VERSION" "$OUT/FocusGuard.zip" --title "Focus Guard $VERSION" --notes-file "$OUT/notes.md"
+gh release create "v$VERSION" "$OUT/FocusGuard.zip" --title "aADHD $VERSION" --notes-file "$OUT/notes.md"
 echo "released v$VERSION"

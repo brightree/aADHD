@@ -1,6 +1,6 @@
-# 🍅 Focus Guard
+# 🍅 aADHD (anti-ADHD)
 
-Focus Guard is a menu bar (macOS) and system tray (Windows) app that helps you build study habits with Pomodoro sessions, website blocking, and a place to park distractions for later.
+aADHD (anti-ADHD) is a menu bar (macOS) and system tray (Windows) app that helps you build study habits with Pomodoro sessions, website blocking, and a place to park distractions for later.
 
 - **Mac:** see [Install](#install).
 - **Windows:** see [Windows](#windows).
@@ -29,7 +29,7 @@ Focus Guard is a menu bar (macOS) and system tray (Windows) app that helps you b
 1. Download **FocusGuard.zip** from the [latest release](https://github.com/brightree/focus-guard/releases/latest).
 2. Open the zip if it isn't unzipped already, and drag **FocusGuard.app** into your **Applications** folder.
 3. Open it. Because the app isn't signed by Apple, macOS blocks it the first time:
-   - **macOS 15 or later:** click **Done**, then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to Focus Guard.
+   - **macOS 15 or later:** click **Done**, then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to FocusGuard.
    - **macOS 14:** Control-click the app, choose **Open**, then click **Open** again.
 
    Or run this once in Terminal instead:
@@ -38,7 +38,7 @@ Focus Guard is a menu bar (macOS) and system tray (Windows) app that helps you b
    xattr -dr com.apple.quarantine /Applications/FocusGuard.app
    ```
 
-Focus Guard appears as a 🍅 in the menu bar. It shows up in the Dock and ⌘Tab only while one of its windows is open.
+aADHD appears as a 🍅 in the menu bar. It shows up in the Dock and ⌘Tab only while one of its windows is open. The download, app file, and data folder keep the name FocusGuard, so existing installs keep updating and keep their records.
 
 ### Option 2: Build from source
 
@@ -58,9 +58,9 @@ if ! xcode-select -p >/dev/null 2>&1; then xcode-select --install; echo "👉 Fi
 | --- | --- | --- |
 | Automation | When the app first tries to control a supported browser | Read tab URLs, redirect blocked tabs, and close a tab when you choose that action in a reminder. |
 | Notifications | On first launch | Show phase changes, distraction reminders, update notices, and storage problems. |
-| Launch at login | When you enable it in Settings | Start Focus Guard when you log in. Blocking only works while the app is running. |
+| Launch at login | When you enable it in Settings | Start aADHD when you log in. Blocking only works while the app is running. |
 
-If you deny browser automation, the menu bar panel shows a warning with a shortcut to **System Settings → Privacy & Security → Automation → Focus Guard**, where you can turn on the relevant browser.
+If you deny browser automation, the menu bar panel shows a warning with a shortcut to **System Settings → Privacy & Security → Automation → aADHD**, where you can turn on the relevant browser.
 
 ## Updating
 
@@ -98,7 +98,7 @@ Requirements: Windows 10 or 11 (64-bit). Supported browsers: Chrome, Edge, Brave
 - Blocking reads the address bar of the **active tab** through Windows UI Automation. Tabs that were already open are blocked when you switch to them. Reading the address bar can make some browsers turn on their accessibility support, which uses a little more memory.
 - Data is stored in `%APPDATA%\FocusGuard\data.json`; settings such as the storage folder and update checks are in `%LOCALAPPDATA%\FocusGuard`. If something goes wrong, `%LOCALAPPDATA%\FocusGuard\crash.log` has the details.
 - Updates download **FocusGuard-Windows.zip** from the latest release and replace `FocusGuard.exe` in place.
-- **Settings → Delete Focus Guard…** removes the app, turns off launch at login, and can move your data to the Recycle Bin.
+- **Settings → Delete aADHD…** removes the app, turns off launch at login, and can move your data to the Recycle Bin.
 
 ## Everyday use
 
@@ -155,7 +155,7 @@ There is no conflict resolution for multiple Macs sharing one folder. A later sa
 
 ### Network and system changes
 
-Focus Guard has no analytics or tracking. Its only outbound requests are the daily update check, which reads the latest release's version and notes from `api.github.com`, and, when you click **Update Now**, downloading that release (or, for source builds, `git pull`). Nothing about you or your usage is sent. **If you choose a folder synced by a cloud service (for example, Google Drive or iCloud Drive), that service uploads your records.**
+aADHD has no analytics or tracking. Its only outbound requests are the daily update check, which reads the latest release's version and notes from `api.github.com`, and, when you click **Update Now**, downloading that release (or, for source builds, `git pull`). Nothing about you or your usage is sent. **If you choose a folder synced by a cloud service (for example, Google Drive or iCloud Drive), that service uploads your records.**
 
 The app does not require administrator privileges or change `/etc/hosts`, network settings, or other system files.
 
@@ -167,13 +167,13 @@ Time on distracting sites is collected in memory and written to the data file at
 
 Browser scripts run synchronously on the main thread with a two-second timeout per script. An unresponsive browser can briefly freeze the interface.
 
-Focus Guard is a self-management aid. Quitting or force-quitting the app, denying automation permission, or using an unsupported browser bypasses blocking.
+aADHD is a self-management aid. Quitting or force-quitting the app, denying automation permission, or using an unsupported browser bypasses blocking.
 
 Releases are signed with a self-signed certificate, not an Apple Developer ID, and aren't notarized, so Gatekeeper blocks the downloaded app until you allow it once (see Install). Builds from source are ad-hoc signed, so macOS may ask for automation permission again after each rebuild.
 
 ## Uninstall
 
-**Settings → Delete Focus Guard…** turns off launch at login, moves the app to the Trash, and quits. Check the box to move your records folder to the Trash as well. Items in the Trash can still be restored until you empty it.
+**Settings → Delete aADHD…** turns off launch at login, moves the app to the Trash, and quits. Check the box to move your records folder to the Trash as well. Items in the Trash can still be restored until you empty it.
 
 To uninstall by hand:
 
@@ -181,7 +181,7 @@ To uninstall by hand:
 2. Open the main window from the menu bar and choose Quit.
 3. Delete `FocusGuard.app`.
 4. To remove your records, delete the active storage folder shown in Settings, including its `backups/` subfolder and any `data.unreadable-*.json` copies. If you changed locations, check previous folders for retained copies as well. Deleting files in a synced folder may also remove them from other devices.
-5. Optionally disable Focus Guard's browser permissions under **System Settings → Privacy & Security → Automation**.
+5. Optionally disable aADHD's browser permissions under **System Settings → Privacy & Security → Automation**.
 
 ## Project structure
 
