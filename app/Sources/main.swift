@@ -115,6 +115,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
     private var lastTitle = ""
 
     func applicationDidFinishLaunching(_ note: Notification) {
+        if Updater.moveToNewName() { return } // 앱 이름이 바뀌었다: 새 이름 자리에서 다시 켜진다
+        Updater.restoreLoginAfterMove()
         item.button?.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .medium)
         item.button?.target = self
         item.button?.action = #selector(togglePopover)

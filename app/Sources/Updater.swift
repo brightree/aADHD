@@ -1,9 +1,10 @@
 import AppKit
+import ServiceManagement
 
 // 새 버전 확인과 버튼 하나로 업데이트.
 // - 하루 한 번 깃허브의 최신 릴리스(버전 번호 · 바뀐 내용)만 읽어 내 버전과 비교한다. 보내는 정보는 없다.
 // - 업데이트:
-//   · 다운로드해서 설치한 앱 → 릴리스의 FocusGuard.zip 을 받아 지금 앱 자리에 바꿔 넣고 다시 켠다.
+//   · 다운로드해서 설치한 앱 → 릴리스의 aADHD.zip 을 받아 지금 앱 자리에 바꿔 넣고 다시 켠다.
 //   · git clone 으로 설치한 앱 → 그 폴더에서 git pull → build.sh 후 다시 켠다.
 
 final class Updater: ObservableObject {
@@ -22,13 +23,14 @@ final class Updater: ObservableObject {
     @Published private(set) var notes = "" // CHANGELOG 중 새 버전 부분
 
     private static let latestAPI = "https://api.github.com/repos/brightree/aADHD/releases/latest"
-    private static let latestZip = "https://github.com/brightree/aADHD/releases/latest/download/FocusGuard.zip"
+    private static let latestZip = "https://github.com/brightree/aADHD/releases/latest/download/aADHD.zip"
     private static let lastCheckKey = "lastUpdateCheck"
     private static let notifiedKey = "notifiedVersion"
+    private static let loginAfterMoveKey = "registerLoginAfterRename"
 
     let current = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
 
-    /// 이 앱이 들어 있는 저장소 (…/focus-guard 등 받은 폴더). 앱이 app/FocusGuard.app 에 있을 때만.
+    /// 이 앱이 들어 있는 저장소 (…/focus-guard 등 받은 폴더). 앱이 app/aADHD.app 에 있을 때만.
     var repoDir: URL? {
         let repo = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
         return FileManager.default.fileExists(atPath: repo.appendingPathComponent(".git").path) ? repo : nil
@@ -100,7 +102,7 @@ final class Updater: ObservableObject {
         }
     }
 
-    /// 릴리스의 FocusGuard.zip 을 받아 풀고, 버전을 확인한 뒤 지금 앱과 바꿔 넣는다.
+    /// 릴리스의 aADHD.zip 을 받아 풀고, 버전을 확인한 뒤 지금 앱과 바꿔 넣는다.
     private func downloadUpdate() {
         state = .updating
         Store.shared.saveNow()
@@ -122,10 +124,10 @@ final class Updater: ObservableObject {
     static func install(zip: URL?, ok: Bool, expected: String?, target: URL = Bundle.main.bundleURL) -> String? {
         guard let zip, ok else { return L("다운로드에 실패했어요.", "The download failed.") }
         let fm = FileManager.default
-        let work = fm.temporaryDirectory.appendingPathComponent("FocusGuardUpdate-\(UUID().uuidString)")
+        let work = fm.temporaryDirectory.appendingPathComponent("aADHDUpdate-\(UUID().uuidString)")
         defer { try? fm.removeItem(at: work) }
         let (unzipped, log) = shell("/usr/bin/ditto -x -k \"\(zip.path)\" \"\(work.path)\"", in: fm.temporaryDirectory)
-        let newApp = work.appendingPathComponent("FocusGuard.app")
+        let newApp = work.appendingPathComponent("aADHD.app")
         guard unzipped, let info = NSDictionary(contentsOf: newApp.appendingPathComponent("Contents/Info.plist")),
               info["CFBundleIdentifier"] as? String == "local.focusguard.app" else {
             return L("받은 파일이 올바르지 않아요.", "The downloaded file isn't valid.") + " " + log.suffix(200)
@@ -142,10 +144,54 @@ final class Updater: ObservableObject {
     }
 
     /// 이 앱이 꺼진 뒤 새 앱을 켜도록 맡겨 두고 종료한다 (포트가 겹치지 않게)
-    private func relaunch() {
-        let app = Bundle.main.bundleURL.path
-        _ = Self.shell("(sleep 1; open \"\(app)\") >/dev/null 2>&1 &", in: FileManager.default.temporaryDirectory, wait: false)
+    private func relaunch() { Self.relaunch(Bundle.main.bundleURL) }
+
+    private static func relaunch(_ app: URL) {
+        _ = shell("(sleep 1; open \"\(app.path)\") >/dev/null 2>&1 &", in: FileManager.default.temporaryDirectory, wait: false)
         NSApp.terminate(nil)
+    }
+
+    /// 예전 이름(FocusGuard.app)으로 켜졌으면 같은 폴더의 aADHD.app 으로 옮겨 다시 켠다. 다시 켜면 true.
+    /// 옮기지 못하면 (폴더에 쓸 수 없는 등) 지금 자리 그대로 쓴다.
+    static func moveToNewName() -> Bool {
+        let old = Bundle.main.bundleURL, fm = FileManager.default
+        guard old.lastPathComponent == "FocusGuard.app" else {
+            // 소스 빌드 폴더에 남은 예전 이름의 앱을 치운다 (build.sh 가 이전 버전용으로 넣어 둔 것)
+            let legacy = old.deletingLastPathComponent().appendingPathComponent("FocusGuard.app")
+            if Bundle(url: legacy)?.bundleIdentifier == Bundle.main.bundleIdentifier {
+                let login = SMAppService.mainApp.status == .enabled
+                try? fm.removeItem(at: legacy)
+                if login { try? SMAppService.mainApp.unregister(); try? SMAppService.mainApp.register() }
+            }
+            return false
+        }
+        let new = old.deletingLastPathComponent().appendingPathComponent("aADHD.app")
+        // 로그인 항목은 앱 위치에 묶여 있어 옮기기 전에 풀고, 새 자리에서 켜질 때 다시 건다
+        let login = SMAppService.mainApp.status == .enabled
+        if login { try? SMAppService.mainApp.unregister() }
+        do {
+            let newVersion = (NSDictionary(contentsOf: new.appendingPathComponent("Contents/Info.plist"))?["CFBundleShortVersionString"] as? String) ?? "0"
+            let current = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+            if fm.fileExists(atPath: new.path) && !isNewer(current, than: newVersion) {
+                try fm.removeItem(at: old) // 새 이름으로 빌드한 앱이 이미 있다 (소스로 설치)
+            } else {
+                if fm.fileExists(atPath: new.path) { try fm.removeItem(at: new) }
+                try fm.moveItem(at: old, to: new)
+            }
+        } catch {
+            if login { try? SMAppService.mainApp.register() }
+            return false
+        }
+        if login { UserDefaults.standard.set(true, forKey: loginAfterMoveKey) }
+        relaunch(new)
+        return true
+    }
+
+    /// 옮기기 전에 로그인 시 자동 실행이 켜져 있었으면 새 자리에서 다시 켠다
+    static func restoreLoginAfterMove() {
+        guard UserDefaults.standard.bool(forKey: loginAfterMoveKey) else { return }
+        UserDefaults.standard.removeObject(forKey: loginAfterMoveKey)
+        try? SMAppService.mainApp.register()
     }
 
     // MARK: - 내부

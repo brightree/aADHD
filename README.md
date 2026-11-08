@@ -45,7 +45,7 @@ aADHD appears as a 🍅 in the menu bar. It shows up in the Dock and ⌘Tab only
 Requires Xcode Command Line Tools. Copy this line, paste it into **Terminal**, and press Return:
 
 ```bash
-if ! xcode-select -p >/dev/null 2>&1; then xcode-select --install; echo "👉 Finish the installer that just opened, then paste this command again."; else cd ~ && ( [ -d focus-guard ] || git clone -q https://github.com/brightree/aADHD.git focus-guard ) && cd focus-guard && git pull -q && cd app && ./build.sh && { pgrep -x FocusGuard >/dev/null && osascript -e 'tell application id "local.focusguard.app" to quit' && sleep 2; open FocusGuard.app; }; fi
+if ! xcode-select -p >/dev/null 2>&1; then xcode-select --install; echo "👉 Finish the installer that just opened, then paste this command again."; else cd ~ && ( [ -d focus-guard ] || git clone -q https://github.com/brightree/aADHD.git focus-guard ) && cd focus-guard && git pull -q && cd app && ./build.sh && { pgrep -xq 'aADHD|FocusGuard' && osascript -e 'tell application id "local.focusguard.app" to quit' && sleep 2; open aADHD.app; }; fi
 ```
 
 - If Xcode Command Line Tools aren't installed yet, an installer opens. When it finishes, paste the same command again.
@@ -74,7 +74,7 @@ Releases are signed with the same certificate, so browser automation permission 
 On version 1.1.1 or earlier, update once from Terminal:
 
 ```bash
-killall FocusGuard; cd ~/focus-guard && git pull && cd app && ./build.sh && open FocusGuard.app
+killall aADHD FocusGuard; cd ~/focus-guard && git pull && cd app && ./build.sh && open aADHD.app
 ```
 
 The current version is shown at the bottom of Settings and the main window. See [CHANGELOG.md](CHANGELOG.md) for changes.
