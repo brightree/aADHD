@@ -88,6 +88,8 @@ public sealed class TimerState
     /// 마지막으로 끝난 집중 세션이 기록된 날 · id (정리 메모를 붙일 곳)
     public string? LastLogDay { get; set; }
     public Guid? LastLogID { get; set; }
+    /// 시간을 정해 둔 딴짓이 끝나는 시각 (대기 중에만)
+    public DateTime? PlayUntil { get; set; }
 }
 
 public sealed class LogEntry

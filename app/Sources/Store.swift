@@ -16,8 +16,12 @@ final class Store: ObservableObject {
 
     /// 단계가 바뀔 때 UI가 창을 띄우도록 알려준다 (이전 단계, 새 단계)
     var onPhaseChange: ((Phase, Phase) -> Void)?
+    /// 정해 둔 딴짓 시간이 끝났을 때 (UI가 집중 시작 창을 띄운다)
+    var onPlayOver: (() -> Void)?
 
     private var streak: (site: String, sec: Double, lastSeen: Date, warnedMin: Int)?
+    /// 딴짓 시간을 넘긴 뒤 마지막으로 알린 분 (nil = 끝났다는 알림 전)
+    private var playNagMin: Int?
     private var lastTickAt: Date?
     private var saveWork: DispatchWorkItem?
     /// data.json 이 있는데 읽지 못했으면(예: 클라우드 파일이 아직 안 내려받아짐) 덮어쓰지 않도록 저장을 막는다
@@ -35,6 +39,8 @@ final class Store: ObservableObject {
 
     private static let dirKey = "dataDir"
     private static let streakGapSec: Double = 180
+    static let playChoices = [5, 10, 15, 30] // 딴짓 시간 (분)
+    private static let playNagEveryMin = 5
 
     private init() {
         if let path = UserDefaults.standard.string(forKey: Self.dirKey) {
@@ -56,6 +62,12 @@ final class Store: ObservableObject {
     var isBlocking: Bool { phase.isStudy }
     var today: DayStats { data.days[dayKey(now)] ?? DayStats() }
     var openLater: [LaterItem] { data.later.filter { !$0.done } }
+
+    /// 시간을 정해 둔 딴짓 중이면 남은 초 (시간을 넘겼으면 음수)
+    var playLeft: TimeInterval? {
+        guard phase == .idle, let end = data.timer.playUntil else { return nil }
+        return end.timeIntervalSince(now)
+    }
 
     var remaining: TimeInterval {
         if let p = data.timer.pausedRemaining { return p }
@@ -117,6 +129,7 @@ final class Store: ObservableObject {
             d.timer.endTime = start.addingTimeInterval(TimeInterval(minutes * 60))
             d.timer.pausedRemaining = nil
             d.timer.startedAt = phase.isStudy ? start : nil
+            d.timer.playUntil = nil
             if let task { d.timer.task = task }
         }
         onPhaseChange?(old, phase)
@@ -125,6 +138,36 @@ final class Store: ObservableObject {
     func startFocus(task: String) {
         streak = nil
         enter(.focus, minutes: settings.focusMin, task: task.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    // MARK: - 시간을 정해 둔 딴짓
+
+    func startPlay(minutes: Int) {
+        guard phase == .idle else { return }
+        streak = nil
+        playNagMin = nil
+        now = Date()
+        mutate { $0.timer.playUntil = Date().addingTimeInterval(TimeInterval(minutes * 60)) }
+    }
+
+    func endPlay() {
+        mutate { $0.timer.playUntil = nil }
+    }
+
+    /// 시간이 끝나면 한 번 알리고 집중 시작 창을 띄운다. 그 뒤로 계속하면 5분마다 다시 알린다.
+    private func checkPlay() {
+        guard let left = playLeft, left <= 0 else { return }
+        let over = Int(-left / 60)
+        guard let nagged = playNagMin else {
+            playNagMin = 0
+            streak = nil // 딴짓 경고는 지금부터 다시 센다
+            notify(L("🎮 딴짓 시간 끝!", "🎮 Free time's up!"), L("정해 둔 시간이 지났어요. 다음 뽀모도로를 시작해요.", "The time you set is up. Start the next Pomodoro."))
+            onPlayOver?()
+            return
+        }
+        guard over - nagged >= Self.playNagEveryMin else { return }
+        playNagMin = over - over % Self.playNagEveryMin
+        notify(L("🎮 딴짓 시간을 \(playNagMin!)분 넘겼어요", "🎮 \(playNagMin!) minutes over your free time"), L("지금 멈추고 집중을 시작해요.", "Stop here and start focusing."))
     }
 
     private func phaseEnded() {
@@ -239,6 +282,7 @@ final class Store: ObservableObject {
         if let end = data.timer.endTime, data.timer.pausedRemaining == nil, now >= end {
             phaseEnded()
         }
+        checkPlay()
         if hasPending, now.timeIntervalSince(lastDistractFlush) >= 30 {
             flushPending()
             scheduleSave()
@@ -429,10 +473,10 @@ final class Store: ObservableObject {
         streak!.sec += delta
         streak!.lastSeen = t
 
-        // 10분, 20분, 30분... 마다 경고
+        // 10분, 20분, 30분... 마다 경고 (시간을 정해 둔 딴짓 중에는 하지 않는다)
         let used = Int(streak!.sec / 60)
         let step = settings.warnAfterMin
-        guard !isBlocking, step > 0, used >= step, used - streak!.warnedMin >= step else { return nil }
+        guard !isBlocking, (playLeft ?? 0) <= 0, step > 0, used >= step, used - streak!.warnedMin >= step else { return nil }
         streak!.warnedMin = used - used % step
         updateToday { $0.warnings += 1 }
         notify(L("⏰ 딴짓 경고", "⏰ Distraction alert"), L("\(site)를 \(streak!.warnedMin)분째 쓰고 있어요.", "You've been on \(site) for \(streak!.warnedMin) minutes."))

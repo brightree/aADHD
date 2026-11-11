@@ -25,11 +25,15 @@ public sealed class Store
     public event Action<string, string>? Notified;
     /// 기록이 바뀔 때마다 (화면 갱신용)
     public event Action? Changed;
+    /// 정해 둔 딴짓 시간이 끝났을 때 (집중 시작 창을 띄운다)
+    public event Action? PlayOver;
 
     readonly Func<DateTime> clock;
     readonly IPrefs prefs;
     sealed class Streak { public string Site = ""; public double Sec; public DateTime LastSeen; public int WarnedMin; }
     Streak? streak;
+    /// 딴짓 시간을 넘긴 뒤 마지막으로 알린 분 (null = 끝났다는 알림 전)
+    int? playNagMin;
     DateTime? lastTickAt, lastStudyTickAt;
     bool saveBlocked;
     DateTime? dirtySince, retryAt;
@@ -41,6 +45,8 @@ public sealed class Store
     const string DirKey = "dataDir";
     const double StreakGapSec = 180;
     public const int MorningHour = 6;
+    public static readonly int[] PlayChoices = { 5, 10, 15, 30 }; // 딴짓 시간 (분)
+    const int PlayNagEveryMin = 5;
 
     public static string DefaultDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FocusGuard");
 
@@ -61,6 +67,8 @@ public sealed class Store
     public Phase Phase => Data.Timer.Phase;
     public bool IsPaused => Data.Timer.PausedRemaining != null;
     public bool IsBlocking => Phase.IsStudy();
+    /// 시간을 정해 둔 딴짓 중이면 남은 초 (시간을 넘겼으면 음수)
+    public double? PlayLeft => Phase == Phase.Idle && Timer.PlayUntil is DateTime end ? (end - Now).TotalSeconds : null;
     public string TodayKey => Fmt.DayKey(Now);
     public DayStats Today => Data.Days.TryGetValue(TodayKey, out var d) ? d : new DayStats();
     public DayStats DayOf(string key) => Data.Days.TryGetValue(key, out var d) ? d : new DayStats();
@@ -137,9 +145,41 @@ public sealed class Store
             d.Timer.EndTime = Now.AddMinutes(minutes);
             d.Timer.PausedRemaining = null;
             d.Timer.StartedAt = phase.IsStudy() ? Now : null;
+            d.Timer.PlayUntil = null;
             if (task != null) d.Timer.Task = task;
         });
         PhaseChanged?.Invoke(old, phase);
+    }
+
+    // MARK: 시간을 정해 둔 딴짓
+
+    public void StartPlay(int minutes)
+    {
+        if (Phase != Phase.Idle) return;
+        streak = null;
+        playNagMin = null;
+        Now = clock();
+        Mutate(d => d.Timer.PlayUntil = Now.AddMinutes(minutes));
+    }
+
+    public void EndPlay() => Mutate(d => d.Timer.PlayUntil = null);
+
+    /// 시간이 끝나면 한 번 알리고 집중 시작 창을 띄운다. 그 뒤로 계속하면 5분마다 다시 알린다.
+    void CheckPlay()
+    {
+        if (PlayLeft is not double left || left > 0) return;
+        var over = (int)(-left / 60);
+        if (playNagMin is not int nagged)
+        {
+            playNagMin = 0;
+            streak = null; // 딴짓 경고는 지금부터 다시 센다
+            Notify(I18n.L("🎮 딴짓 시간 끝!", "🎮 Free time's up!"), I18n.L("정해 둔 시간이 지났어요. 다음 뽀모도로를 시작해요.", "The time you set is up. Start the next Pomodoro."));
+            PlayOver?.Invoke();
+            return;
+        }
+        if (over - nagged < PlayNagEveryMin) return;
+        playNagMin = over - over % PlayNagEveryMin;
+        Notify(I18n.L($"🎮 딴짓 시간을 {playNagMin}분 넘겼어요", $"🎮 {playNagMin} minutes over your free time"), I18n.L("지금 멈추고 집중을 시작해요.", "Stop here and start focusing."));
     }
 
     public void StartFocus(string task)
@@ -240,6 +280,7 @@ public sealed class Store
     {
         Now = clock();
         if (Timer.EndTime is DateTime end && Timer.PausedRemaining == null && Now >= end) PhaseEnded();
+        CheckPlay();
         if (HasPending && (Now - lastPendingFlush).TotalSeconds >= 30) { FlushPending(); dirtySince ??= Now; }
         // 변경이 계속 들어와도 1초 안에 한 번은 저장한다. 실패하면 30초 뒤 다시.
         if (dirtySince is DateTime ds && (Now - ds).TotalSeconds >= 1 && (retryAt is null || Now >= retryAt)) SaveNow();
@@ -379,10 +420,10 @@ public sealed class Store
         s.Sec += delta;
         s.LastSeen = t;
 
-        // 10분, 20분, 30분... 마다
+        // 10분, 20분, 30분... 마다 (시간을 정해 둔 딴짓 중에는 하지 않는다)
         var used = (int)(s.Sec / 60);
         var step = Settings.WarnAfterMin;
-        if (IsBlocking || step <= 0 || used < step || used - s.WarnedMin < step) return null;
+        if (IsBlocking || (PlayLeft ?? 0) > 0 || step <= 0 || used < step || used - s.WarnedMin < step) return null;
         s.WarnedMin = used - used % step;
         UpdateToday(d => d.Warnings += 1);
         Notify(I18n.L("⏰ 딴짓 경고", "⏰ Distraction alert"),

@@ -345,6 +345,54 @@ public class TrackingTests
         h.Store.StartFocus("x");
         for (var i = 0; i < 11 * 60; i++) { h.Clock = h.Clock.AddSeconds(1); Assert.Null(h.Store.ReportBrowsing("youtube.com", true)); }
     }
+
+    [Fact]
+    public void TimedFreeTimeWarnsWhenOverAndEveryFiveMinutesAfter()
+    {
+        using var h = new Harness();
+        var s = h.Store;
+        var over = 0;
+        s.PlayOver += () => over++;
+        s.StartPlay(15);
+        Assert.Equal(15 * 60, s.PlayLeft);
+        for (var i = 0; i < 15 * 60 - 1; i++) { h.Advance(1); Assert.Null(s.ReportBrowsing("youtube.com", true)); } // 정해 둔 시간 안에는 경고 없음
+        Assert.Equal(0, over);
+        h.Advance(1);
+        Assert.Equal(1, over);
+        Assert.Single(h.Notes, n => n.Contains("🎮"));
+        for (var i = 0; i < 4 * 60 + 59; i++) h.Advance(1);
+        Assert.Single(h.Notes, n => n.Contains("🎮"));
+        h.Advance(1); // 5분 넘김
+        Assert.Equal(2, h.Notes.Count(n => n.Contains("🎮")));
+        Assert.Equal(1, over);
+        Assert.True(s.PlayLeft < 0);
+
+        s.StartFocus("x");
+        Assert.Null(s.PlayLeft);
+        Assert.Null(s.Timer.PlayUntil);
+    }
+
+    [Fact]
+    public void EndingFreeTimeEarlyStopsTheTimer()
+    {
+        using var h = new Harness();
+        var s = h.Store;
+        s.StartPlay(5);
+        h.Advance(60);
+        s.EndPlay();
+        Assert.Null(s.PlayLeft);
+        h.Advance(10 * 60);
+        Assert.DoesNotContain(h.Notes, n => n.Contains("🎮"));
+    }
+
+    [Fact]
+    public void FreeTimeOnlyStartsWhenIdle()
+    {
+        using var h = new Harness();
+        h.Store.StartFocus("x");
+        h.Store.StartPlay(10);
+        Assert.Null(h.Store.Timer.PlayUntil);
+    }
 }
 
 public class StorageTests

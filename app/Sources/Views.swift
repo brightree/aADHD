@@ -15,15 +15,24 @@ struct PopoverView: View {
     @State private var saved = false
     enum Ask { case pause, openApp }
     @State private var asking: Ask?
+    @State private var choosingPlay = false
     @FocusState private var focused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(store.phase.label + (store.isPaused ? L(" · 일시정지", " · Paused") : "")).foregroundStyle(.secondary)
-                Spacer()
-                if store.phase != .idle {
-                    Text(fmtClock(store.remaining)).font(.title2.bold().monospacedDigit())
+                if let left = store.playLeft {
+                    Text(left > 0 ? L("🎮 딴짓 중", "🎮 Free time") : L("🎮 딴짓 시간 끝", "🎮 Free time's up")).foregroundStyle(.secondary)
+                    Spacer()
+                    Text(left > 0 ? fmtClock(left) : "+" + fmtClock(-left)) // 넘긴 시간
+                        .font(.title2.bold().monospacedDigit())
+                        .foregroundStyle(left > 0 ? Color.primary : Color.red)
+                } else {
+                    Text(store.phase.label + (store.isPaused ? L(" · 일시정지", " · Paused") : "")).foregroundStyle(.secondary)
+                    Spacer()
+                    if store.phase != .idle {
+                        Text(fmtClock(store.remaining)).font(.title2.bold().monospacedDigit())
+                    }
                 }
             }
             if store.phase.isStudy, !store.timer.task.isEmpty {
@@ -53,14 +62,37 @@ struct PopoverView: View {
                 }
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: 10).fill(Color.red.opacity(0.08)))
+            } else if store.phase == .idle, store.playLeft != nil {
+                HStack {
+                    Button(action: primary) { Text(L("🍅 집중 시작", "🍅 Start Focus")).frame(maxWidth: .infinity) }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    Button { store.endPlay() } label: { Text(L("딴짓 그만", "End Free Time")).frame(maxWidth: .infinity) }
+                }
+                .controlSize(.large)
             } else if store.phase == .idle {
                 HStack {
                     Button(action: primary) { Text(L("🍅 시작", "🍅 Start")).frame(maxWidth: .infinity) }
                         .buttonStyle(.borderedProminent)
                         .tint(.red)
-                    Button(action: openApp) { Text(L("앱 열기", "Open App")).frame(maxWidth: .infinity) }
+                    Button { choosingPlay.toggle() } label: { Text(L("🎮 딴짓", "🎮 Free Time")).lineLimit(1).frame(maxWidth: .infinity) }
+                        .help(L("시간을 정해 두고 딴짓해요. 끝나면 알려줘요.", "Take a timed break from work. You'll be told when it's over."))
+                    Button(action: openApp) { Text(L("앱 열기", "Open App")).lineLimit(1).frame(maxWidth: .infinity) }
                 }
                 .controlSize(.large)
+                if choosingPlay {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L("몇 분만 할까요? 끝나면 알려드려요.", "How many minutes? You'll be told when it's over."))
+                            .font(.caption).foregroundStyle(.secondary)
+                        HStack {
+                            ForEach(Store.playChoices, id: \.self) { m in
+                                Button { store.startPlay(minutes: m); choosingPlay = false; close() } label: {
+                                    Text(L("\(m)분", "\(m) min")).frame(maxWidth: .infinity)
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 // 진행 중: [일시정지/재개] [앱 열기] [중지] = 2 : 1 : 1
                 GeometryReader { g in

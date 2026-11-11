@@ -128,6 +128,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
             self?.checkNewDay(now)
         }.store(in: &bag)
         store.onPhaseChange = { [weak self] old, new in self?.phaseChanged(from: old, to: new) }
+        store.onPlayOver = { [weak self] in self?.showStart() }
 
         UNUserNotificationCenter.current().delegate = self
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
@@ -156,9 +157,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
 
     func renderTitle() {
         guard let b = item.button else { return }
-        let title = store.phase == .idle
-            ? "🍅"
-            : "\(store.isPaused ? "⏸" : store.phase.icon) \(Int((store.remaining / 60).rounded(.up)))"
+        let title: String
+        if let left = store.playLeft {
+            title = left > 0 ? "🎮 \(Int((left / 60).rounded(.up)))" : "🎮 +\(Int(-left / 60))" // 넘긴 시간
+        } else if store.phase == .idle {
+            title = "🍅"
+        } else {
+            title = "\(store.isPaused ? "⏸" : store.phase.icon) \(Int((store.remaining / 60).rounded(.up)))"
+        }
         guard title != lastTitle else { return }
         lastTitle = title
         b.title = title

@@ -44,6 +44,7 @@ sealed class Controller : ApplicationContext
         Store.Notified += (t, b) => { if (!selfTest) Tray.ShowBalloonTip(5000, t, b, ToolTipIcon.None); };
         Store.Changed += () => { dataChanged = true; QueueRefresh(); };
         Store.PhaseChanged += OnPhaseChanged;
+        Store.PlayOver += ShowStart;
 
         server = new LocalServer(store, f => OnUi(f), CloseTabKey);
         ServerListening = server.Start(port); // 포트가 이미 쓰이면 차단 페이지만 안 뜬다 (차단은 계속)
@@ -110,14 +111,18 @@ sealed class Controller : ApplicationContext
 
     void RenderTray()
     {
-        var minutes = Store.Phase == Phase.Idle ? "" : ((int)Math.Ceiling(Store.Remaining / 60)).ToString();
-        var key = $"{Store.Phase}|{Store.IsPaused}|{minutes}";
+        var play = Store.PlayLeft;
+        var minutes = play is double left ? (left > 0 ? ((int)Math.Ceiling(left / 60)).ToString() : "+" + (int)(-left / 60)) // 넘긴 시간
+            : Store.Phase == Phase.Idle ? "" : ((int)Math.Ceiling(Store.Remaining / 60)).ToString();
+        var key = $"{Store.Phase}|{Store.IsPaused}|{play != null}|{minutes}";
         if (key == lastTrayText) return;
         lastTrayText = key;
-        var tip = Store.Phase == Phase.Idle ? "aADHD" : $"{Store.Phase.Label()} · {minutes}{L("분", " min")}" + (Store.Timer.Task.Length > 0 ? $" · {Store.Timer.Task}" : "");
+        var tip = play is double l2 ? (l2 > 0 ? L($"🎮 딴짓 중 · {minutes}분", $"🎮 Free time · {minutes} min") : L($"🎮 딴짓 시간 {minutes[1..]}분 넘김", $"🎮 {minutes[1..]} min over free time"))
+            : Store.Phase == Phase.Idle ? "aADHD" : $"{Store.Phase.Label()} · {minutes}{L("분", " min")}" + (Store.Timer.Task.Length > 0 ? $" · {Store.Timer.Task}" : "");
         Tray.Text = tip.Length > 63 ? tip[..63] : tip;
         var old = Tray.Icon;
-        Tray.Icon = Store.Phase == Phase.Idle ? AppIcon : DrawBadge(minutes, Store.IsPaused ? Color.Gray : Store.Phase switch { Phase.Focus => Ui.Red, Phase.Wrap => Ui.Orange, _ => Ui.Green });
+        Tray.Icon = play is double l3 ? DrawBadge(minutes, l3 > 0 ? Ui.Blue : Ui.Red)
+            : Store.Phase == Phase.Idle ? AppIcon : DrawBadge(minutes, Store.IsPaused ? Color.Gray : Store.Phase switch { Phase.Focus => Ui.Red, Phase.Wrap => Ui.Orange, _ => Ui.Green });
         if (old != AppIcon) old?.Dispose();
     }
 

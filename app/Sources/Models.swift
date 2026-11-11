@@ -106,6 +106,7 @@ struct TimerState: Codable {
     var task = ""
     var lastLogDay: String? // 마지막으로 끝난 집중 세션이 기록된 날 (정리 메모를 붙일 곳)
     var lastLogID: UUID?
+    var playUntil: Date? // 시간을 정해 둔 딴짓이 끝나는 시각 (대기 중에만)
 
     init() {}
     init(from decoder: Decoder) throws {
@@ -117,6 +118,7 @@ struct TimerState: Codable {
         pausedRemaining = try c.decodeIfPresent(TimeInterval.self, forKey: .pausedRemaining)
         startedAt = try c.decodeIfPresent(Date.self, forKey: .startedAt)
         task = try c.decodeIfPresent(String.self, forKey: .task) ?? ""
+        playUntil = try c.decodeIfPresent(Date.self, forKey: .playUntil)
     }
 }
 
