@@ -86,6 +86,21 @@ final class Windows: NSObject, NSWindowDelegate {
     }
 }
 
+/// 누르면 클로저를 실행하는 메뉴 항목
+final class MenuAction: NSMenuItem {
+    private let run: () -> Void
+
+    init(_ title: String, _ run: @escaping () -> Void) {
+        self.run = run
+        super.init(title: title, action: #selector(fire), keyEquivalent: "")
+        target = self
+    }
+
+    required init(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    @objc private func fire() { run() }
+}
+
 // MARK: - 전역 단축키
 
 enum HotKey {
@@ -120,6 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
         item.button?.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .medium)
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp]) // 오른쪽 클릭 → 딴짓 메뉴
         popover.behavior = .transient
         popover.delegate = self
 
@@ -175,6 +191,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
 
     @objc func togglePopover() {
         guard let button = item.button else { return }
+        if NSApp.currentEvent?.type == .rightMouseUp { return showPlayMenu() }
         if popover.isShown {
             popover.performClose(nil)
             return
@@ -191,6 +208,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
+    }
+
+    // MARK: 오른쪽 클릭 메뉴 — 시간을 정해 둔 딴짓
+
+    func showPlayMenu() {
+        if popover.isShown { popover.performClose(nil) }
+        let menu = NSMenu()
+        func note(_ title: String) { menu.addItem(withTitle: title, action: nil, keyEquivalent: "") } // 동작 없는 줄은 흐리게 보인다
+        if let left = store.playLeft {
+            note(left > 0 ? L("🎮 딴짓 중 · \(Int((left / 60).rounded(.up)))분 남음", "🎮 Free time · \(Int((left / 60).rounded(.up))) min left")
+                          : L("🎮 딴짓 시간을 \(Int(-left / 60))분 넘겼어요", "🎮 \(Int(-left / 60)) min over free time"))
+            menu.addItem(MenuAction(L("🍅 집중 시작", "🍅 Start Focus")) { [weak self] in self?.showStart() })
+            menu.addItem(MenuAction(L("딴짓 그만", "End Free Time")) { [weak self] in self?.store.endPlay(); self?.renderTitle() })
+        } else if store.phase == .idle {
+            note(L("🎮 딴짓 몇 분만 할까요? 끝나면 알려드려요", "🎮 Free time for how long? You'll be told when it's over"))
+            for m in Store.playChoices {
+                menu.addItem(MenuAction(L("\(m)분", "\(m) min")) { [weak self] in self?.store.startPlay(minutes: m); self?.renderTitle() })
+            }
+        } else {
+            note(L("🎮 딴짓은 휴식까지 끝난 뒤에 할 수 있어요", "🎮 Free time is available once the break is over"))
+        }
+        item.menu = menu
+        item.button?.performClick(nil) // 메뉴가 있으면 클릭이 메뉴를 연다
+        item.menu = nil
     }
 
     // 닫힌 패널의 화면을 놓아준다

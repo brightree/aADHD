@@ -9,7 +9,6 @@ sealed class PanelForm : AppWindow
     const int W = 340;
     enum Ask { None, Pause, OpenApp }
     Ask asking = Ask.None;
-    bool choosingPlay;
 
     readonly Label phase = Ui.Text("", null, Ui.Muted), clock = Ui.Text("", Ui.Big), task = Ui.Text("", null, null, W - 32);
     readonly FlowLayoutPanel body = Ui.Column(W - 32), buttons = Ui.Column(W - 32), todos = Ui.Column(W - 32), extras = Ui.Column(W - 32);
@@ -63,7 +62,6 @@ sealed class PanelForm : AppWindow
 
     public void ShowNearTray()
     {
-        choosingPlay = false;
         RefreshView(true);
         var area = Screen.FromPoint(Cursor.Position).WorkingArea;
         Location = new Point(area.Right - Width - 12, area.Bottom - Height - 12);
@@ -74,24 +72,13 @@ sealed class PanelForm : AppWindow
 
     public override void RefreshView(bool dataChanged)
     {
-        var play = Store.PlayLeft;
-        if (play is double left)
-        {
-            phase.Text = left > 0 ? L("🎮 딴짓 중", "🎮 Free time") : L("🎮 딴짓 시간 끝", "🎮 Free time's up");
-            clock.Text = left > 0 ? Fmt.Clock(left) : "+" + Fmt.Clock(-left); // 넘긴 시간
-            clock.ForeColor = left > 0 ? ForeColor : Ui.Red;
-        }
-        else
-        {
-            phase.Text = Store.Phase.Label() + (Store.IsPaused ? L(" · 일시정지", " · Paused") : "");
-            clock.Text = Store.Phase == Phase.Idle ? "" : Fmt.Clock(Store.Remaining);
-            clock.ForeColor = ForeColor;
-        }
+        phase.Text = Store.Phase.Label() + (Store.IsPaused ? L(" · 일시정지", " · Paused") : "");
+        clock.Text = Store.Phase == Phase.Idle ? "" : Fmt.Clock(Store.Remaining);
         task.Text = Store.Phase.IsStudy() && Store.Timer.Task.Length > 0 ? "📌 " + Store.Timer.Task : "";
         task.Visible = task.Text.Length > 0;
         if (Store.Phase != Phase.Focus || Store.IsPaused) asking = Ask.None;
 
-        var key = $"{Store.Phase}|{Store.IsPaused}|{asking}|{play != null}|{choosingPlay}|{I18n.Current}";
+        var key = $"{Store.Phase}|{Store.IsPaused}|{asking}|{I18n.Current}";
         if (key != buttonsKey) { buttonsKey = key; BuildButtons(); }
         if (dataChanged) { BuildExtras(); BuildTodos(); }
     }
@@ -122,32 +109,13 @@ sealed class PanelForm : AppWindow
         }
         var grid = new TableLayoutPanel { Width = W - 32, Height = 40, Margin = new Padding(0, 6, 0, 6) };
         Control fill(Control c) { c.Dock = DockStyle.Fill; c.Margin = new Padding(0, 0, 6, 0); return c; }
-        if (Store.Phase == Phase.Idle && Store.PlayLeft != null)
+        if (Store.Phase == Phase.Idle)
         {
             grid.ColumnCount = 2;
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-            grid.Controls.Add(fill(Ui.Button(L("🍅 집중 시작", "🍅 Start Focus"), () => { Hide(); App.PrimaryAction(); }, primary: true)), 0, 0);
-            grid.Controls.Add(fill(Ui.Button(L("딴짓 그만", "End Free Time"), () => Store.EndPlay())), 1, 0);
-        }
-        else if (Store.Phase == Phase.Idle)
-        {
-            grid.ColumnCount = 3;
-            for (var i = 0; i < 3; i++) grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.3f));
             grid.Controls.Add(fill(Ui.Button(L("🍅 시작", "🍅 Start"), () => { Hide(); App.PrimaryAction(); }, primary: true)), 0, 0);
-            grid.Controls.Add(fill(Ui.Button(L("🎮 딴짓", "🎮 Free Time"), () => { choosingPlay = !choosingPlay; RefreshView(false); })), 1, 0);
-            grid.Controls.Add(fill(Ui.Button(L("앱 열기", "Open App"), () => { Hide(); App.ShowDashboard(); })), 2, 0);
-            if (choosingPlay)
-            {
-                buttons.Controls.Add(grid);
-                buttons.Controls.Add(Ui.Text(L("몇 분만 할까요? 끝나면 알려드려요.", "How many minutes? You'll be told when it's over."), Ui.Small, Ui.Muted));
-                var row = Ui.Row();
-                foreach (var m in Store.PlayChoices)
-                    row.Controls.Add(Ui.Button(L($"{m}분", $"{m} min"), () => { choosingPlay = false; Store.StartPlay(m); Hide(); }));
-                buttons.Controls.Add(row);
-                buttons.ResumeLayout();
-                return;
-            }
+            grid.Controls.Add(fill(Ui.Button(L("앱 열기", "Open App"), () => { Hide(); App.ShowDashboard(); })), 1, 0);
         }
         else
         {

@@ -37,8 +37,8 @@ sealed class Controller : ApplicationContext
         Tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) TogglePanel(); };
         Tray.BalloonTipClicked += (_, _) => TogglePanel();
         var menu = new ContextMenuStrip();
-        menu.Items.Add(L("앱 열기", "Open App"), null, (_, _) => ShowDashboard());
-        menu.Items.Add(L("종료", "Quit"), null, (_, _) => Quit());
+        menu.Opening += (_, _) => BuildTrayMenu(menu);
+        menu.Items.Add(""); // 비어 있으면 열리지 않는다 — 열 때마다 새로 채운다
         Tray.ContextMenuStrip = menu;
 
         Store.Notified += (t, b) => { if (!selfTest) Tray.ShowBalloonTip(5000, t, b, ToolTipIcon.None); };
@@ -105,6 +105,34 @@ sealed class Controller : ApplicationContext
         dataChanged = false;
         foreach (var w in windows.Values.ToList()) if (!w.IsDisposed && w.Visible) w.RefreshView(changed);
         if (panel is { IsDisposed: false, Visible: true }) panel.RefreshView(changed);
+    }
+
+    // MARK: 트레이 오른쪽 클릭 메뉴 — 시간을 정해 둔 딴짓 · 앱 열기 · 종료
+
+    void BuildTrayMenu(ContextMenuStrip menu)
+    {
+        menu.Items.Clear();
+        void note(string text) => menu.Items.Add(new ToolStripMenuItem(text) { Enabled = false });
+        if (Store.PlayLeft is double left)
+        {
+            note(left > 0 ? L($"🎮 딴짓 중 · {(int)Math.Ceiling(left / 60)}분 남음", $"🎮 Free time · {(int)Math.Ceiling(left / 60)} min left")
+                          : L($"🎮 딴짓 시간을 {(int)(-left / 60)}분 넘겼어요", $"🎮 {(int)(-left / 60)} min over free time"));
+            menu.Items.Add(L("🍅 집중 시작", "🍅 Start Focus"), null, (_, _) => ShowStart());
+            menu.Items.Add(L("딴짓 그만", "End Free Time"), null, (_, _) => { Store.EndPlay(); RenderTray(); });
+        }
+        else if (Store.Phase == Phase.Idle)
+        {
+            note(L("🎮 딴짓 몇 분만 할까요? 끝나면 알려드려요", "🎮 Free time for how long? You'll be told when it's over"));
+            foreach (var m in Store.PlayChoices)
+                menu.Items.Add(L($"{m}분", $"{m} min"), null, (_, _) => { Store.StartPlay(m); RenderTray(); });
+        }
+        else
+        {
+            note(L("🎮 딴짓은 휴식까지 끝난 뒤에 할 수 있어요", "🎮 Free time is available once the break is over"));
+        }
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(L("앱 열기", "Open App"), null, (_, _) => ShowDashboard());
+        menu.Items.Add(L("종료", "Quit"), null, (_, _) => Quit());
     }
 
     // MARK: 트레이 아이콘 (남은 분을 아이콘 위에 쓴다)
