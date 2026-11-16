@@ -141,6 +141,10 @@ abstract class AppWindow : Form
     }
 
     public abstract void RefreshView(bool dataChanged);
+
+    /// 저절로 뜨는 창: 쓰던 앱의 키보드 입력을 가져오지 않는다 (누르면 그때 앞으로)
+    public bool Quiet { get; set; }
+    protected override bool ShowWithoutActivation => Quiet;
 }
 
 /// 할 일 한 줄: 동그라미 눌러 체크, 글자 더블 클릭해서 고치기 (Enter 저장 · Esc 취소), 마우스를 올리면 삭제 버튼

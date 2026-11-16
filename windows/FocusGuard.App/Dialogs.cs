@@ -36,7 +36,7 @@ sealed class StartForm : SmallWindow
         row.Controls.Add(Ui.Button(L("취소", "Cancel"), Close));
         row.Controls.Add(Ui.Button(L("🍅 집중 시작", "🍅 Start Focus"), Start, primary: true));
         Body.Controls.AddRange(new Control[] { question, lastNote, task, picks, info, row });
-        Shown += (_, _) => { task.Focus(); task.SelectAll(); };
+        Shown += (_, _) => { task.SelectAll(); if (Quiet) ActiveControl = task; else task.Focus(); }; // 저절로 뜬 창은 누를 때까지 키보드를 가져오지 않는다
     }
 
     void Start()
@@ -83,7 +83,7 @@ sealed class WrapForm : SmallWindow
         head.Controls.Add(left);
         var done = Ui.Button(L("정리 완료 → 휴식", "Done → Start Break"), () => { Store.SaveNote(note.Text); Store.FinishWrap(); Close(); }, primary: true);
         Body.Controls.AddRange(new Control[] { head, taskLabel, Ui.Text(L("어디까지 했고, 다음엔 뭘 하나요?", "Where did you leave off, and what's next?"), Ui.Bold), note, laterTitle, laterList, done });
-        Shown += (_, _) => note.Focus();
+        Shown += (_, _) => { if (Quiet) ActiveControl = note; else note.Focus(); };
     }
 
     public override void RefreshView(bool dataChanged)

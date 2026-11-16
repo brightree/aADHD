@@ -25,8 +25,9 @@ final class Windows: NSObject, NSWindowDelegate {
     }
 
     /// height: 처음 열 때의 높이 (스크롤되는 긴 창용). 주면 그 뒤로는 사용자가 크기를 조절할 수 있다.
+    /// quiet: 저절로 뜨는 창 — 화면 오른쪽 위에 띄우기만 하고, 쓰던 앱의 키보드 입력을 가져오지 않는다 (누르면 그때 앞으로).
     func show<V: View>(_ id: String, title: String, floating: Bool = false, resizable: Bool = false,
-                       height: CGFloat? = nil, @ViewBuilder content: () -> V) {
+                       height: CGFloat? = nil, quiet: Bool = false, @ViewBuilder content: () -> V) {
         let root = content().environmentObject(Store.shared)
         let w: NSWindow
         let wasVisible = windows[id]?.isVisible == true
@@ -54,6 +55,9 @@ final class Windows: NSObject, NSWindowDelegate {
             if let height {
                 w.setContentSize(NSSize(width: w.frame.width, height: min(height, (screen?.visibleFrame.height ?? 800) * 0.85)))
                 if let screen { center(w, on: screen) }
+            } else if quiet, let screen {
+                let v = screen.visibleFrame
+                w.setFrameOrigin(NSPoint(x: v.maxX - w.frame.width - 16, y: v.maxY - w.frame.height - 16))
             } else if let screen, w.frame.origin == .zero || w.screen != screen {
                 center(w, on: screen)
             }
@@ -61,8 +65,12 @@ final class Windows: NSObject, NSWindowDelegate {
         w.title = title
         w.level = floating ? .floating : .normal
         NSApp.setActivationPolicy(.regular) // 창이 있는 동안은 Dock 과 ⌘Tab 에 보인다
-        NSApp.activate(ignoringOtherApps: true)
-        w.makeKeyAndOrderFront(nil)
+        if quiet && !NSApp.isActive {
+            w.orderFrontRegardless()
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+            w.makeKeyAndOrderFront(nil)
+        }
     }
 
     /// NSWindow.center() 처럼 가운데보다 조금 위에 둔다 (center() 는 화면을 고를 수 없다)
@@ -144,7 +152,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
             self?.checkNewDay(now)
         }.store(in: &bag)
         store.onPhaseChange = { [weak self] old, new in self?.phaseChanged(from: old, to: new) }
-        store.onPlayOver = { [weak self] in self?.showStart() }
+        store.onPlayOver = { [weak self] in self?.showStart(quiet: true) }
 
         UNUserNotificationCenter.current().delegate = self
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
@@ -266,22 +274,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, UNU
         renderTitle()
         switch new {
         case .focus: watcher.sweepAllTabs() // 미리 열어둔 분산 사이트 탭도 막는다
-        case .wrap: showWrap()
+        case .wrap: showWrap(quiet: true)
         case .rest: Windows.shared.close("wrap")
-        case .idle where old == .rest: showStart() // 휴식 끝나면 바로 다음 할 일을 묻는다
+        case .idle where old == .rest: showStart(quiet: true) // 휴식 끝나면 바로 다음 할 일을 묻는다
         default: break
         }
     }
 
-    func showStart() {
+    func showStart(quiet: Bool = false) {
         let last = store.today.log.last?.task ?? ""
-        Windows.shared.show("start", title: L("집중 시작", "Start Focus"), floating: true) {
+        Windows.shared.show("start", title: L("집중 시작", "Start Focus"), floating: true, quiet: quiet) {
             StartView(task: last) { Windows.shared.close("start") }
         }
     }
 
-    func showWrap() {
-        Windows.shared.show("wrap", title: L("정리", "Wrap-up"), floating: true) {
+    func showWrap(quiet: Bool = false) {
+        Windows.shared.show("wrap", title: L("정리", "Wrap-up"), floating: true, quiet: quiet) {
             WrapView { Windows.shared.close("wrap") }
         }
     }

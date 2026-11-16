@@ -44,7 +44,7 @@ sealed class Controller : ApplicationContext
         Store.Notified += (t, b) => { if (!selfTest) Tray.ShowBalloonTip(5000, t, b, ToolTipIcon.None); };
         Store.Changed += () => { dataChanged = true; QueueRefresh(); };
         Store.PhaseChanged += OnPhaseChanged;
-        Store.PlayOver += ShowStart;
+        Store.PlayOver += ShowStartQuietly;
 
         server = new LocalServer(store, f => OnUi(f), CloseTabKey);
         ServerListening = server.Start(port); // 포트가 이미 쓰이면 차단 페이지만 안 뜬다 (차단은 계속)
@@ -172,22 +172,30 @@ sealed class Controller : ApplicationContext
 
     // MARK: 창
 
-    public T Show<T>(string id, Func<T> make) where T : AppWindow
+    /// quiet: 저절로 뜨는 창 — 작업 표시줄 위 오른쪽 구석에 띄우기만 하고 키보드 입력은 가져오지 않는다
+    public T Show<T>(string id, Func<T> make, bool quiet = false) where T : AppWindow
     {
         if (windows.TryGetValue(id, out var w) && !w.IsDisposed && w is T existing)
         {
             if (existing.WindowState == FormWindowState.Minimized) existing.WindowState = FormWindowState.Normal;
             existing.RefreshView(true);
             existing.Show();
-            existing.Activate();
+            if (!quiet) existing.Activate();
             return existing;
         }
         var n = make();
         windows[id] = n;
         n.FormClosed += (_, _) => windows.Remove(id);
         n.RefreshView(true);
+        n.Quiet = quiet;
+        if (quiet) n.StartPosition = FormStartPosition.Manual;
         n.Show();
-        n.Activate();
+        if (quiet)
+        {
+            var area = Screen.FromPoint(Cursor.Position).WorkingArea;
+            n.Location = new Point(area.Right - n.Width - 12, area.Bottom - n.Height - 12);
+        }
+        else n.Activate();
         return n;
     }
 
@@ -207,6 +215,7 @@ sealed class Controller : ApplicationContext
 
     public void ShowStart() => Show("start", () => new StartForm(this));
     public void ShowWrap() => Show("wrap", () => new WrapForm(this));
+    void ShowStartQuietly() => Show("start", () => new StartForm(this), quiet: true);
     public void ShowCapture() => Show("capture", () => new CaptureForm(this));
     public void ShowGiveUp(bool thenQuit = false) => Show("giveup", () => new GiveUpForm(this, thenQuit));
     public void ShowDashboard() => Show("dashboard", () => new DashboardForm(this));
@@ -222,9 +231,9 @@ sealed class Controller : ApplicationContext
         RenderTray();
         switch (now)
         {
-            case Phase.Wrap: ShowWrap(); break;
+            case Phase.Wrap: Show("wrap", () => new WrapForm(this), quiet: true); break;
             case Phase.Rest: Close("wrap"); break;
-            case Phase.Idle when old == Phase.Rest: ShowStart(); break; // 휴식이 끝나면 바로 다음 할 일을 묻는다
+            case Phase.Idle when old == Phase.Rest: ShowStartQuietly(); break; // 휴식이 끝나면 바로 다음 할 일을 묻는다
         }
     }
 
