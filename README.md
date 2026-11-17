@@ -1,16 +1,15 @@
 # 🍅 aADHD (anti-ADHD)
 
-**Anti-ADHD for researchers in the AI era.** While an AI writes your code, runs your analysis, or drafts your text, it takes one wait to drift to YouTube, and then another. aADHD keeps you on task: a menu bar (macOS) and system tray (Windows) app with Pomodoro sessions, website blocking, and a place to park distractions for later.
+**Anti-ADHD for researchers in the AI era.** While an AI writes your code, runs your analysis, or drafts your text, it takes one wait to drift to YouTube, and then another. aADHD keeps you on task: a macOS menu bar app with Pomodoro sessions, website blocking, and a place to park distractions for later.
 
-- **Mac:** see [Install](#install).
-- **Windows:** see [Windows](#windows).
+For macOS only; see [Install](#install).
 
 ## Features
 
 - **A customizable focus cycle:** 35 minutes of focus, 3 minutes to wrap up, and a 7-minute break by default. Set wrap-up or break to 0 minutes to skip it.
 - **Website blocking:** Redirects distracting sites to a local blocked page during focus and wrap-up, including while the timer is paused. The default list includes YouTube, Instagram, LinkedIn, Facebook, X, Twitter, Reddit, and Netflix. You can paste full URLs into the list; only the domain is kept, and lines that aren't recognized as domains are reported. An allow list overrides the block list for specific subdomains; by default it contains `music.youtube.com`, so YouTube Music (including its installed Chrome app) keeps playing during focus.
 - **Distraction reminders:** Outside focus and wrap-up, warns you after 10 minutes of tracked use on a listed site, then at further 10-minute intervals. Brief interruptions of up to 3 minutes can count toward the same streak.
-- **Timed free time:** When you need a break from work, right-click the 🍅 in the menu bar (or the tray icon on Windows) and pick 5, 10, 15, or 30 minutes. The same menu ends free time early. The menu bar counts down; distraction reminders pause until the time is up. Then you get a notification and the Start Focus window. If you keep going, the menu bar shows how far over you are (for example, `🎮 +3`) and you're reminded every 5 minutes.
+- **Timed free time:** When you need a break from work, right-click the 🍅 in the menu bar and pick 5, 10, 15, or 30 minutes. The same menu ends free time early. The menu bar counts down; distraction reminders pause until the time is up. Then you get a notification and the Start Focus window. If you keep going, the menu bar shows how far over you are (for example, `🎮 +3`) and you're reminded every 5 minutes.
 - **A "Later" list:** Capture a thought from the menu bar or press `⌥⇧L` from any app. Review your list during wrap-up.
 - **Daily planning:** Organize tasks into must-do, nice-to-do, and other tasks for today or any other day, then check them off as you go. The to-do window opens the first time you use your Mac after 6 a.m. each day, showing anything you planned ahead; you can turn this off in Settings.
 - **Weekly history:** Review daily study time, completed sessions, wrap-up notes, and time spent on distracting sites. Sessions that cross midnight are split between the two days.
@@ -79,27 +78,6 @@ killall aADHD FocusGuard; cd ~/focus-guard && git pull && cd app && ./build.sh &
 ```
 
 The current version is shown at the bottom of Settings and the main window. See [CHANGELOG.md](CHANGELOG.md) for changes.
-
-## Windows
-
-The Windows version has the same features and data format. It lives in the system tray (the 🍅 shows the minutes left).
-
-### Install
-
-1. Download **FocusGuard-Windows.zip** from the [latest release](https://github.com/brightree/aADHD/releases/latest).
-2. Unzip it into a folder you own, such as `Documents\FocusGuard` (not `Program Files`, so the app can update itself).
-3. Run **FocusGuard.exe**. Because the app isn't signed, Windows SmartScreen may say "Windows protected your PC": click **More info → Run anyway**.
-4. If you don't see the 🍅, click the **^** arrow next to the clock and drag it onto the taskbar.
-
-Requirements: Windows 10 or 11 (64-bit). Supported browsers: Chrome, Edge, Brave, Firefox, Vivaldi, Opera, and Naver Whale.
-
-### Differences from the Mac version
-
-- "Later" shortcut is **Ctrl+Alt+L** (Alt+Shift switches the input language on Windows).
-- Blocking reads the address bar of the **active tab** through Windows UI Automation. Tabs that were already open are blocked when you switch to them. Reading the address bar can make some browsers turn on their accessibility support, which uses a little more memory.
-- Data is stored in `%APPDATA%\FocusGuard\data.json`; settings such as the storage folder and update checks are in `%LOCALAPPDATA%\FocusGuard`. If something goes wrong, `%LOCALAPPDATA%\FocusGuard\crash.log` has the details.
-- Updates download **FocusGuard-Windows.zip** from the latest release and replace `FocusGuard.exe` in place.
-- **Settings → Delete aADHD…** removes the app, turns off launch at login, and can move your data to the Recycle Bin.
 
 ## Everyday use
 
@@ -187,10 +165,6 @@ To uninstall by hand:
 ## Project structure
 
 ```text
-windows/                   Windows version (.NET, WinForms)
-  FocusGuard.Core/         Timer, records, settings, local server — shared rules, tested on any OS
-  FocusGuard.Core.Tests/   Unit tests
-  FocusGuard.App/          Tray app, windows, address-bar watcher, updater
 app/
   VERSION                  App version (shown in Settings)
   build.sh                 Builds the app with swiftc; no Xcode project required

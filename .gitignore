@@ -18,6 +18,3 @@ INTERNAL.md
 # 서명 인증서 (이 맥에만 둔다)
 .signing/
 
-# .NET 빌드 결과
-windows/**/bin/
-windows/**/obj/
