@@ -43,8 +43,9 @@ final class BrowserWatcher {
             _ = store.reportBrowsing(site: nil, active: userActive)
             return
         }
-        if store.isBlocking {
-            _ = run(bid, "tell application id \"\(bid)\" to set URL of \(Self.browsers[bid]!) of front window to \"\(blockedURL(url))\"",
+        if store.isBlocking || store.limitReached(site) {
+            let page = blockedURL(url, limited: store.isBlocking ? nil : site)
+            _ = run(bid, "tell application id \"\(bid)\" to set URL of \(Self.browsers[bid]!) of front window to \"\(page)\"",
                     cache: false)
             return
         }
@@ -109,13 +110,15 @@ final class BrowserWatcher {
         guard let host = URL(string: url)?.host?.lowercased() else { return nil }
         let matches = { (site: String) in host == site || host.hasSuffix("." + site) }
         if store.settings.allowSites.contains(where: matches) { return nil }
-        return store.settings.sites.first(where: matches)
+        // 시간 제한 사이트도 분산 사이트다. 먼저 찾아서 사용 시간이 그 이름으로 쌓이게 한다.
+        return (store.settings.limitSites + store.settings.sites).first(where: matches)
     }
 
     /// 원래 주소는 # 뒤에 넣는다 (서버로는 보내지지 않음). 영숫자 외에는 모두 인코딩해 따옴표가 섞일 수 없다.
-    private func blockedURL(_ url: String) -> String {
-        let encoded = url.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
-        return "http://127.0.0.1:\(SERVER_PORT)/blocked#\(encoded)"
+    /// limited: 하루 제한을 다 써서 막는 사이트 (차단 페이지가 그 안내를 보여준다)
+    private func blockedURL(_ url: String, limited: String? = nil) -> String {
+        let encode = { (s: String) in s.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "" }
+        return "http://127.0.0.1:\(SERVER_PORT)/blocked" + (limited.map { "?site=" + encode($0) } ?? "") + "#\(encode(url))"
     }
 
     /// 이 브라우저에 스크립트를 보내도 되는지.

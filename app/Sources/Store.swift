@@ -22,6 +22,8 @@ final class Store: ObservableObject {
     private var streak: (site: String, sec: Double, lastSeen: Date, warnedMin: Int)?
     /// 딴짓 시간을 넘긴 뒤 마지막으로 알린 분 (nil = 끝났다는 알림 전)
     private var playNagMin: Int?
+    /// 하루 제한 알림을 이미 보낸 것 ("날짜|사이트|left" · "날짜|사이트|over")
+    private var limitNotified: Set<String> = []
     private var lastTickAt: Date?
     private var saveWork: DispatchWorkItem?
     /// data.json 이 있는데 읽지 못했으면(예: 클라우드 파일이 아직 안 내려받아짐) 덮어쓰지 않도록 저장을 막는다
@@ -62,6 +64,31 @@ final class Store: ObservableObject {
     var isBlocking: Bool { phase.isStudy }
     var today: DayStats { data.days[dayKey(now)] ?? DayStats() }
     var openLater: [LaterItem] { data.later.filter { !$0.done } }
+
+    /// 오늘 이 사이트를 쓴 시간 (초, 아직 파일에 반영 전인 것 포함)
+    func usedToday(_ site: String) -> Double {
+        let k = dayKey(now)
+        return (data.days[k]?.distractSec[site] ?? 0) + (pendingDistract[k]?[site] ?? 0)
+    }
+
+    /// 하루 제한 시간을 다 쓴 사이트인지 (그날은 집중 시간이 아니어도 막는다)
+    func limitReached(_ site: String) -> Bool {
+        settings.limitMin > 0 && settings.limitSites.contains(site) && usedToday(site) >= Double(settings.limitMin * 60)
+    }
+
+    var limitedToday: [String] { settings.limitSites.filter(limitReached) }
+
+    /// 제한 사이트를 쓰는 중이면 2분 남았을 때와 다 썼을 때 한 번씩 알린다
+    private func checkLimit(_ site: String) {
+        guard settings.limitMin > 0, settings.limitSites.contains(site) else { return }
+        let left = Double(settings.limitMin * 60) - usedToday(site), day = dayKey(now)
+        if left <= 0, limitNotified.insert("\(day)|\(site)|over").inserted {
+            notify(L("⏳ 오늘 \(site) 시간을 다 썼어요", "⏳ Today's time on \(site) is used up"),
+                   L("하루 \(settings.limitMin)분까지예요. 내일 다시 열려요.", "The limit is \(settings.limitMin) minutes a day. It opens again tomorrow."))
+        } else if left > 0, left <= 120, settings.limitMin > 2, limitNotified.insert("\(day)|\(site)|left").inserted {
+            notify(L("⏳ \(site) 2분 남았어요", "⏳ 2 minutes left on \(site)"), L("오늘 쓸 수 있는 시간이 곧 끝나요.", "Today's time is almost up."))
+        }
+    }
 
     /// 시간을 정해 둔 딴짓 중이면 남은 초 (시간을 넘겼으면 음수)
     var playLeft: TimeInterval? {
@@ -310,6 +337,7 @@ final class Store: ObservableObject {
         }
         s.sites = normalized(s.sites)
         s.allowSites = normalized(s.allowSites)
+        s.limitSites = normalized(s.limitSites)
         if s.stopPhrase.trimmingCharacters(in: .whitespaces).isEmpty || Lang.allCases.contains(where: { s.stopPhrase == Settings.defaultStopPhrase($0) }) {
             s.stopPhrase = Settings.defaultStopPhrase(s.language) // 기본 문장을 쓰던 중이면 언어에 맞춰 바꾼다
         }
@@ -472,6 +500,7 @@ final class Store: ObservableObject {
         if streak?.site != site { streak = (site, 0, t, 0) }
         streak!.sec += delta
         streak!.lastSeen = t
+        checkLimit(site)
 
         // 10분, 20분, 30분... 마다 경고 (시간을 정해 둔 딴짓 중에는 하지 않는다)
         let used = Int(streak!.sec / 60)

@@ -1148,6 +1148,7 @@ struct SettingsView: View {
     @State private var allowText = ""
     @State private var saved = false
     @State private var rejected: [String] = []
+    @State private var limitText = ""
     var chooseFolder: () -> Void
     var revealFolder: () -> Void
     var toggleLogin: () -> Void
@@ -1204,6 +1205,19 @@ struct SettingsView: View {
                 .frame(height: 44)
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(.quaternary))
 
+            Text(L("하루 시간 제한 사이트 (한 줄에 하나)", "Daily time limit sites (one per line)")).font(.headline)
+            TextEditor(text: $limitText)
+                .font(.body.monospaced())
+                .frame(height: 44)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(.quaternary))
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
+                NumberRow(label: L("하루 최대 (분, 0 = 끄기)", "Daily limit (min, 0 = off)"), value: $s.limitMin, range: Settings.limitRange)
+            }
+            Text(L("오늘 이만큼 쓰면 쉬는 시간 · 딴짓 시간에도 막혀요. 내일 다시 열려요. 집중 · 정리 중에는 원래처럼 막혀요.",
+                   "Once you've used this much today, the site is blocked even on breaks and free time. It opens again tomorrow. During focus and wrap-up it's blocked as usual."))
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             Toggle(L("집중 중 쓴 앱 · 사이트 기록 (학습 통계용, 이 맥에만 저장)", "Track apps and sites used while focusing (for stats, stored only on this Mac)"), isOn: $s.trackStudyUsage)
             Toggle(L("아침 6시 이후 처음 맥을 쓸 때 할 일 창 띄우기", "Show to-dos the first time I use my Mac after 6 a.m."), isOn: $s.morningPlan)
 
@@ -1211,6 +1225,7 @@ struct SettingsView: View {
                 Button(L("저장", "Save")) {
                     s.sites = sitesText.split(whereSeparator: \.isNewline).map(String.init)
                     s.allowSites = allowText.split(whereSeparator: \.isNewline).map(String.init)
+                    s.limitSites = limitText.split(whereSeparator: \.isNewline).map(String.init)
                     rejected = store.updateSettings(s)
                     load()
                     saved = true
@@ -1270,6 +1285,7 @@ struct SettingsView: View {
         s = store.settings
         sitesText = s.sites.joined(separator: "\n")
         allowText = s.allowSites.joined(separator: "\n")
+        limitText = s.limitSites.joined(separator: "\n")
     }
 }
 

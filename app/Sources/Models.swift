@@ -47,6 +47,9 @@ struct Settings: Codable, Equatable {
     var sites = ["youtube.com", "linkedin.com", "instagram.com", "facebook.com", "x.com", "twitter.com", "reddit.com", "netflix.com"]
     /// 차단 목록의 하위 도메인이어도 막지 않는 사이트 (예: 공부하며 듣는 유튜브 뮤직)
     var allowSites = ["music.youtube.com"]
+    /// 하루에 쓸 수 있는 시간을 정해 둔 사이트 — 오늘 limitMin 분을 다 쓰면 집중 시간이 아니어도 막는다
+    var limitSites = ["instagram.com", "linkedin.com"]
+    var limitMin = 10 // 0 = 끄기
     /// 집중·정리 중 맨 앞 앱과 사이트(도메인)를 통계용으로 기록할지
     var trackStudyUsage = true
     /// 아침 6시 이후 처음 맥을 쓸 때 할 일 창 띄우기
@@ -64,6 +67,8 @@ struct Settings: Codable, Equatable {
         stopPhrase = try c.decodeIfPresent(String.self, forKey: .stopPhrase) ?? Settings.defaultStopPhrase(language)
         sites = try c.decodeIfPresent([String].self, forKey: .sites) ?? d.sites
         allowSites = try c.decodeIfPresent([String].self, forKey: .allowSites) ?? d.allowSites
+        limitSites = try c.decodeIfPresent([String].self, forKey: .limitSites) ?? d.limitSites
+        limitMin = try c.decodeIfPresent(Int.self, forKey: .limitMin) ?? d.limitMin
         trackStudyUsage = try c.decodeIfPresent(Bool.self, forKey: .trackStudyUsage) ?? d.trackStudyUsage
         morningPlan = try c.decodeIfPresent(Bool.self, forKey: .morningPlan) ?? d.morningPlan
         self = clamped()
@@ -85,6 +90,7 @@ struct Settings: Codable, Equatable {
     static let wrapRange = 0...30
     static let breakRange = 0...60
     static let warnRange = 1...120
+    static let limitRange = 0...240
 
     /// 모든 숫자 설정을 허용 범위 안으로 맞춘다 (화면 입력, 저장, 파일 읽기 모두 여기를 거친다)
     func clamped() -> Settings {
@@ -94,6 +100,7 @@ struct Settings: Codable, Equatable {
         s.wrapMin = clamp(wrapMin, Self.wrapRange)
         s.breakMin = clamp(breakMin, Self.breakRange)
         s.warnAfterMin = clamp(warnAfterMin, Self.warnRange)
+        s.limitMin = clamp(limitMin, Self.limitRange)
         return s
     }
 }

@@ -46,6 +46,11 @@ func blockedPageHTML() -> String {
     <h1>\#(L("앱과 연결할 수 없어요", "Can not reach aADHD"))</h1>
     <p class="muted">\#(L("aADHD가 켜져 있는지 확인해 주세요. 연결되면 자동으로 다시 보여드려요.", "Make sure aADHD is running. This page updates once it reconnects."))</p>
   </div>
+  <div id="limitView" class="hidden">
+    <h1 id="limitTitle"></h1>
+    <p class="muted" id="limitText"></p>
+    <p class="muted" style="margin-top:16px">\#(L("⌘W로 이 탭을 닫아요.", "Press ⌘W to close this tab."))</p>
+  </div>
   <div id="doneView" class="hidden">
     <h1>\#(L("집중 시간이 끝났어요", "Focus time is over"))</h1>
     <p class="muted">\#(L("이제 원래 페이지로 갈 수 있어요.", "You can go back to the page now."))</p>
@@ -60,8 +65,9 @@ func blockedPageHTML() -> String {
   if (!/^https?:\/\//.test(original)) original = '';
   $('url').textContent = original ? '\#(L("차단된 주소: ", "Blocked URL: "))' + original : '';
   $('go').href = original || 'about:blank';
+  const limitSite = new URLSearchParams(location.search).get('site') || '';
 
-  // view: 'loading' | 'offline' | 'blocking' | 'done' — never show 'done' before a valid response
+  // view: 'loading' | 'offline' | 'blocking' | 'limit' | 'done' — never show 'done' before a valid response
   let st = null, view = 'loading', fetchedAt = 0;
   const clock = (s) => { s = Math.max(0, s); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
 
@@ -69,6 +75,11 @@ func blockedPageHTML() -> String {
     $('focusView').classList.toggle('hidden', view !== 'blocking');
     $('offlineView').classList.toggle('hidden', view !== 'offline');
     $('doneView').classList.toggle('hidden', view !== 'done');
+    $('limitView').classList.toggle('hidden', view !== 'limit');
+    if (view === 'limit') {
+      $('limitTitle').textContent = '\#(L("오늘 ", "Used up for today: "))' + limitSite + '\#(L(" 시간을 다 썼어요", ""))';
+      $('limitText').textContent = '\#(L("하루 ", "The limit is "))' + st.limitMin + '\#(L("분까지예요. 내일 다시 열려요.", " minutes a day. It opens again tomorrow."))';
+    }
     if (view !== 'blocking') return;
     const left = st.paused ? st.remainingSec : st.remainingSec - Math.round((Date.now() - fetchedAt) / 1000);
     $('left').textContent = clock(left) + (st.paused ? '\#(L(" (일시정지)", " (paused)"))' : '');
@@ -82,7 +93,7 @@ func blockedPageHTML() -> String {
       const s = await res.json();
       if (typeof s.block !== 'boolean') throw new Error('bad status');
       st = s; fetchedAt = Date.now();
-      view = s.block ? 'blocking' : 'done';
+      view = s.block ? 'blocking' : (limitSite && (s.limited || []).includes(limitSite)) ? 'limit' : 'done';
     } catch {
       view = 'offline';
     }

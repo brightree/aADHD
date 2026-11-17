@@ -137,6 +137,8 @@ final class StateServer {
             "paused": store.isPaused,
             "remainingSec": store.phase == .idle ? 0 : Int(store.remaining.rounded()),
             "task": t.task,
+            "limited": store.limitedToday, // 오늘 제한 시간을 다 쓴 사이트
+            "limitMin": store.settings.limitMin,
         ]
     }
 }
