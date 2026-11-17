@@ -1,6 +1,6 @@
-# 🍅 aADHD (anti-ADHD)
+# 🍅 Focus Guard
 
-**Anti-ADHD for researchers in the AI era.** While an AI writes your code, runs your analysis, or drafts your text, it takes one wait to drift to YouTube, and then another. aADHD keeps you on task: a macOS menu bar app with Pomodoro sessions, website blocking, and a place to park distractions for later.
+**Anti-ADHD for researchers in the AI era.** While an AI writes your code, runs your analysis, or drafts your text, it takes one wait to drift to YouTube, and then another. Focus Guard keeps you on task: a macOS menu bar app with Pomodoro sessions, website blocking, and a place to park distractions for later.
 
 For macOS only; see [Install](#install).
 
@@ -27,7 +27,7 @@ For macOS only; see [Install](#install).
 
 ### Option 1: Download (recommended)
 
-1. Download **FocusGuard.zip** from the [latest release](https://github.com/brightree/aADHD/releases/latest).
+1. Download **FocusGuard.zip** from the [latest release](https://github.com/brightree/focus-guard/releases/latest).
 2. Open the zip if it isn't unzipped already, and drag **FocusGuard.app** into your **Applications** folder.
 3. Open it. Because the app isn't signed by Apple, macOS blocks it the first time:
    - **macOS 15 or later:** click **Done**, then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to FocusGuard.
@@ -39,14 +39,14 @@ For macOS only; see [Install](#install).
    xattr -dr com.apple.quarantine /Applications/FocusGuard.app
    ```
 
-aADHD appears as a 🍅 in the menu bar. It shows up in the Dock and ⌘Tab only while one of its windows is open. The download, app file, and data folder keep the name FocusGuard, so existing installs keep updating and keep their records.
+Focus Guard appears as a 🍅 in the menu bar. It shows up in the Dock and ⌘Tab only while one of its windows is open.
 
 ### Option 2: Build from source
 
 Requires Xcode Command Line Tools. Copy this line, paste it into **Terminal**, and press Return:
 
 ```bash
-if ! xcode-select -p >/dev/null 2>&1; then xcode-select --install; echo "👉 Finish the installer that just opened, then paste this command again."; else cd ~ && ( [ -d focus-guard ] || git clone -q https://github.com/brightree/aADHD.git focus-guard ) && cd focus-guard && git pull -q && cd app && ./build.sh && { pgrep -xq 'aADHD|FocusGuard' && osascript -e 'tell application id "local.focusguard.app" to quit' && sleep 2; open aADHD.app; }; fi
+if ! xcode-select -p >/dev/null 2>&1; then xcode-select --install; echo "👉 Finish the installer that just opened, then paste this command again."; else cd ~ && ( [ -d focus-guard ] || git clone -q https://github.com/brightree/focus-guard.git focus-guard ) && cd focus-guard && git pull -q && cd app && ./build.sh && { pgrep -xq FocusGuard && osascript -e 'tell application id "local.focusguard.app" to quit' && sleep 2; open FocusGuard.app; }; fi
 ```
 
 - If Xcode Command Line Tools aren't installed yet, an installer opens. When it finishes, paste the same command again.
@@ -59,9 +59,9 @@ if ! xcode-select -p >/dev/null 2>&1; then xcode-select --install; echo "👉 Fi
 | --- | --- | --- |
 | Automation | When the app first tries to control a supported browser | Read tab URLs, redirect blocked tabs, and close a tab when you choose that action in a reminder. |
 | Notifications | On first launch | Show phase changes, distraction reminders, update notices, and storage problems. |
-| Launch at login | When you enable it in Settings | Start aADHD when you log in. Blocking only works while the app is running. |
+| Launch at login | When you enable it in Settings | Start Focus Guard when you log in. Blocking only works while the app is running. |
 
-If you deny browser automation, the menu bar panel shows a warning with a shortcut to **System Settings → Privacy & Security → Automation → aADHD**, where you can turn on the relevant browser.
+If you deny browser automation, the menu bar panel shows a warning with a shortcut to **System Settings → Privacy & Security → Automation → Focus Guard**, where you can turn on the relevant browser.
 
 ## Updating
 
@@ -70,13 +70,7 @@ The app checks GitHub for a new release once a day. When one is available, you g
 - **Downloaded app:** the new FocusGuard.zip is downloaded and replaces the app in place.
 - **Built from source:** the app runs `git pull` and `build.sh` in its folder.
 
-Releases are signed with the same certificate, so browser automation permission granted once carries over to later updates. (Updating from 1.6.0 or earlier asks one more time.)
-
-On version 1.1.1 or earlier, update once from Terminal:
-
-```bash
-killall aADHD FocusGuard; cd ~/focus-guard && git pull && cd app && ./build.sh && open aADHD.app
-```
+Releases are signed with the same certificate, so browser automation permission granted once carries over to later updates.
 
 The current version is shown at the bottom of Settings and the main window. See [CHANGELOG.md](CHANGELOG.md) for changes.
 
@@ -135,7 +129,7 @@ There is no conflict resolution for multiple Macs sharing one folder. A later sa
 
 ### Network and system changes
 
-aADHD has no analytics or tracking. Its only outbound requests are the daily update check, which reads the latest release's version and notes from `api.github.com`, and, when you click **Update Now**, downloading that release (or, for source builds, `git pull`). Nothing about you or your usage is sent. **If you choose a folder synced by a cloud service (for example, Google Drive or iCloud Drive), that service uploads your records.**
+Focus Guard has no analytics or tracking. Its only outbound requests are the daily update check, which reads the latest release's version and notes from `api.github.com`, and, when you click **Update Now**, downloading that release (or, for source builds, `git pull`). Nothing about you or your usage is sent. **If you choose a folder synced by a cloud service (for example, Google Drive or iCloud Drive), that service uploads your records.**
 
 The app does not require administrator privileges or change `/etc/hosts`, network settings, or other system files.
 
@@ -147,13 +141,13 @@ Time on distracting sites is collected in memory and written to the data file at
 
 Browser scripts run synchronously on the main thread with a two-second timeout per script. An unresponsive browser can briefly freeze the interface.
 
-aADHD is a self-management aid. Quitting or force-quitting the app, denying automation permission, or using an unsupported browser bypasses blocking.
+Focus Guard is a self-management aid. Quitting or force-quitting the app, denying automation permission, or using an unsupported browser bypasses blocking.
 
 Releases are signed with a self-signed certificate, not an Apple Developer ID, and aren't notarized, so Gatekeeper blocks the downloaded app until you allow it once (see Install). Builds from source are ad-hoc signed, so macOS may ask for automation permission again after each rebuild.
 
 ## Uninstall
 
-**Settings → Delete aADHD…** turns off launch at login, moves the app to the Trash, and quits. Check the box to move your records folder to the Trash as well. Items in the Trash can still be restored until you empty it.
+**Settings → Delete Focus Guard…** turns off launch at login, moves the app to the Trash, and quits. Check the box to move your records folder to the Trash as well. Items in the Trash can still be restored until you empty it.
 
 To uninstall by hand:
 
@@ -161,7 +155,7 @@ To uninstall by hand:
 2. Open the main window from the menu bar and choose Quit.
 3. Delete `FocusGuard.app`.
 4. To remove your records, delete the active storage folder shown in Settings, including its `backups/` subfolder and any `data.unreadable-*.json` copies. If you changed locations, check previous folders for retained copies as well. Deleting files in a synced folder may also remove them from other devices.
-5. Optionally disable aADHD's browser permissions under **System Settings → Privacy & Security → Automation**.
+5. Optionally disable Focus Guard's browser permissions under **System Settings → Privacy & Security → Automation**.
 
 ## Project structure
 
